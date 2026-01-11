@@ -5,7 +5,6 @@ from torch.utils.data import Dataset
 
 # https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/datasets/reddit.html#Reddit
 from torch_geometric.datasets import Planetoid
-#from torch_geometric.data import Dataset, download_url
 
 class MyDataset(Dataset):
     """My custom dataset."""
