@@ -5,7 +5,7 @@ DTU machine learning operations project
 ## Project description
 The goal of this project is to implement, optimize, and evaluate a steerable group equivariant convolutional neural network (GCNN) using escnn, a PyTorch-based library that enables the construction of convolutional networks with  equivariance to symmetry groups such as rotations and reflections (and even reflections). The project focuses on applying these models to a realworld medical imaging task in histopathology, where robustness to these geometric transformations is important.
 
-Standard convolutional neural networks are equivariant only to translations. However, histopathological images often contain additional symmetries, becuase  tissue samples can appear in arbitrary orientation. Rotations and reflections of a tissue patch do not change its underlying cancer status, yet standard CNNs must learn these symmetries through data augmentation. By explicitly encoding symmetry through group equivariance, steerable GCNNs offer a inbuilt way to improve generalization by implement equviarant filters using fourier coefficients. 
+Standard convolutional neural networks are equivariant only to translations. However, histopathological images often contain additional symmetries, becuase  tissue samples can appear in arbitrary orientation. Rotations and reflections of a tissue patch do not change its underlying cancer status, yet standard CNNs must learn these symmetries through data augmentation. By explicitly encoding symmetry through group equivariance, steerable GCNNs offer a inbuilt way to improve generalization by implement equviarant filters using fourier coefficients.
 
 The primary dataset used in this project is PatchCamelyon (PCam), a  dataset for detecting metastatic cancer in lymph node histology images. The dataset consists of 96×96 RGB image patches, each labeled according to whether it contains tumor tissue, resulting in a binary classification problem. PCam is well suited for this study because the class label is invariant under rotations and reflections, making it an ideal testbed for equivariant models. The dataset will initially be used with its standard training, validation, and test splits.
 
@@ -64,3 +64,9 @@ The directory structure of the project looks like this:
 Created using [mlops_template](https://github.com/SkafteNicki/mlops_template),
 a [cookiecutter template](https://github.com/cookiecutter/cookiecutter) for getting
 started with Machine Learning Operations (MLOps).
+
+## Commands
+Quickly train a model:
+```sh
+uv run ./src/dtu_mlops_project/train.py --output "model.pth"
+```
