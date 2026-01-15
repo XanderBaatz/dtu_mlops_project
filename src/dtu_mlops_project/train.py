@@ -1,15 +1,13 @@
-from dtu_mlops_project.model import GCN, C8SteerableCNN
-#from dtu_mlops_project.data import pcam_dataset
+from dtu_mlops_project.model import GCN
 from torch_geometric.datasets import Planetoid
 import torch
 import torch_geometric
 import matplotlib.pyplot as plt
-from tqdm import tqdm
-import typer
-from typing import Annotated
-plt.style.use("ggplot")
+import hydra
+from omegaconf import DictConfig
+import os
 
-app = typer.Typer()
+plt.style.use("ggplot")
 
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available()
@@ -17,83 +15,85 @@ DEVICE = torch.device(
     else "cpu"
 )
 
-@app.command()
-def train(
-        lr: float = 1e-3,
-        batch_size: int = 32,
-        epochs: int = 100,
-        output: Annotated[str, typer.Option("--output", "-o")] = "model.pth"
-    ) -> None:
+@hydra.main(config_path="../../configs", config_name="config", version_base="1.1")
+def train(cfg: DictConfig) -> None:
     print("Training started...")
     print("Device:", DEVICE)
-    print(f"{lr=}, {batch_size=}, {epochs=}")
-
-    #model = C8SteerableCNN(n_classes=2).to(DEVICE)
+    print(f"lr={cfg.hyperparameters.lr}, batch_size={cfg.hyperparameters.batch_size}, epochs={cfg.hyperparameters.epochs}")
+    
+    # Set seed for reproducibility
+    torch.manual_seed(cfg.hyperparameters.seed)
+    
+    # Initialize model
     model = GCN().to(DEVICE)
-    dataset = Planetoid(root="data", name="Cora")
-
-    train_dataloader = torch_geometric.loader.DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    #train_dataloader = torch.utils.data.DataLoader(train_set, batch_size=batch_size, shuffle=True)
-
+    
+    # Get original working directory (Hydra changes it)
+    original_cwd = hydra.utils.get_original_cwd()
+    
+    # Load dataset using absolute path
+    dataset_root = os.path.join(original_cwd, cfg.dataset.root)
+    dataset = Planetoid(root=dataset_root, name=cfg.dataset.name)
+    
+    train_dataloader = torch_geometric.loader.DataLoader(
+        dataset, 
+        batch_size=cfg.hyperparameters.batch_size, 
+        shuffle=True
+    )
+    
+    # Setup training
     loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.hyperparameters.lr)
+    
     # Collect statistics
-    statistics: dict = {
+    statistics = {
         "train_loss": [],
         "train_accuracy": [],
     }
-
-    for epoch in range(epochs):
-        model.train() # set model to training mode
-
+    
+    for epoch in range(cfg.hyperparameters.epochs):
+        model.train()
         for i, data in enumerate(train_dataloader):
             data = data.to(DEVICE)
-            optimizer.zero_grad() # clear previous gradients
-
+            optimizer.zero_grad()
+            
             # Forward pass
             out = model(data.x, data.edge_index)
-
+            
             # Compute loss only for training nodes
             loss = loss_fn(out[data.train_mask], data.y[data.train_mask])
-
+            
             # Backpropagation and optimization step
             loss.backward()
             optimizer.step()
-
+            
             # Log statistics
             statistics["train_loss"].append(loss.item())
             accuracy = (out[data.train_mask].argmax(dim=1) == data.y[data.train_mask]).sum().item() / data.train_mask.sum().item()
             statistics["train_accuracy"].append(accuracy)
-
+            
             if i % 100 == 0:
                 print(f"Epoch {epoch+1}, iter {i}, loss: {loss.item()}")
-
-    #for epoch in range(epochs):
-    #    model.train()
-    #    for i, (img, target) in enumerate(train_dataloader):
-    #        img, target = img.to(DEVICE), target.to(DEVICE)
-    #        optimizer.zero_grad()
-    #        y_pred = model(img)
-    #        loss = loss_fn(y_pred, target)
-    #        loss.backward()
-    #        optimizer.step()
-    #        statistics["train_loss"].append(loss.item())
-    #
-    #        accuracy = (y_pred.argmax(dim=1) == target).float().mean().item()
-    #        statistics["train_accuracy"].append(accuracy)
-    #
-    #        if i % 100 == 0:
-    #            print(f"Epoch {epoch}, iter {i}, loss: {loss.item()}")
-
+    
     print("Training finished.")
-    torch.save(model.state_dict(), f"models/{output}")
+    
+    # Save model using absolute path
+    model_dir = os.path.join(original_cwd, "models")
+    os.makedirs(model_dir, exist_ok=True)
+    model_path = os.path.join(model_dir, cfg.output.model_path)
+    torch.save(model.state_dict(), model_path)
+    print(f"Model saved to {model_path}")
+    
+    # Plot statistics
+    figures_dir = os.path.join(original_cwd, cfg.output.figures_dir)
+    os.makedirs(figures_dir, exist_ok=True)
+    
     fig, axs = plt.subplots(1, 2, figsize=(15, 5))
     axs[0].plot(statistics["train_loss"])
     axs[0].set_title("Train loss")
     axs[1].plot(statistics["train_accuracy"])
     axs[1].set_title("Train accuracy")
-    fig.savefig("reports/figures/training_statistics.pdf")
+    fig.savefig(os.path.join(figures_dir, "training_statistics.pdf"))
+    print(f"Figures saved to {figures_dir}")
 
 if __name__ == "__main__":
-    app()
+    train()
