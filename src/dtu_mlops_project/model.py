@@ -1,23 +1,215 @@
-import torch
 from torch_geometric.nn import GCNConv
+from torch import nn, optim
 from escnn import gspaces
-from escnn import nn
+from escnn import nn as enn
+import lightning as L
+import wandb
 
-class Model(torch.nn.Module):
-    """Just a dummy model to show how to structure your code"""
+# Base model class example (Pytorch Lightning)
+# Inspired by https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
+class Model(L.LightningModule):
     def __init__(self):
         super().__init__()
-        self.layer = torch.nn.Linear(1, 1)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layer(x)
+        self.save_hyperparameters()
+
+        self.model = ...  # Define your model architecture here
+
+        self.criterium = ... # Define your loss function here
+
+    def forward(self, x):
+        raise NotImplementedError("Forward method not implemented.")
+
+    def training_step(self, batch, batch_idx):
+        raise NotImplementedError("Training step not implemented.")
+
+    def test_step(self, batch, batch_idx):
+        raise NotImplementedError("Test step not implemented.")
+
+    def validation_step(self, batch, batch_idx):
+        raise NotImplementedError("Validation step not implemented.")
+
+    def configure_optimizers(self):
+        raise NotImplementedError("Optimizer configuration not implemented.")
+
+
+# Define a simple feedforward neural network
+class NN(L.LightningModule):
+    def __init__(
+        self,
+        input_size: int = 28*28,
+        hidden_size1: int = 128,
+        hidden_size2: int = 64,
+        output_size: int = 10,
+        lr: float = 1e-2,
+    ):
+        super().__init__()
+
+        self.lr = lr
+
+        # Save hyperparameters
+        self.save_hyperparameters()
+
+        # Model
+        self.model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(input_size, hidden_size1),
+            nn.ReLU(),
+            nn.Linear(hidden_size1, hidden_size2),
+            nn.ReLU(),
+            nn.Linear(hidden_size2, output_size)
+        )
+
+        # Loss function
+        self.criterium = nn.CrossEntropyLoss()
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        inputs, targets = batch
+        y_pred = self(inputs)
+        loss = self.criterium(y_pred, targets)
+        acc = (y_pred.argmax(1) == targets).float().mean()
+
+        # Logging
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        inputs, targets = batch
+        y_pred = self(inputs)
+        loss = self.criterium(y_pred, targets)
+        acc = (y_pred.argmax(1) == targets).float().mean()
+
+        # Logging
+        self.log("test_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+        self.log("test_acc", acc, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        inputs, targets = batch
+        y_pred = self(inputs)
+        loss = self.criterium(y_pred, targets)
+        acc = (y_pred.argmax(1) == targets).float().mean()
+
+        # Logging
+        self.log("val_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+        self.log("val_acc", acc, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
+
+# Define a simple CNN model
+class CNN(L.LightningModule):
+    def __init__(
+        self,
+        input_channels: int = 1,
+        kernel_size: int = 3,
+        pool_size: int = 2,
+        stride: int = 1,
+        padding: int = 0,
+        num_classes: int = 10,
+        lr: float = 1e-2,
+    ):
+        super().__init__()
+
+        self.lr = lr
+
+        self.save_hyperparameters()
+
+        # CNN model
+        self.model = nn.Sequential(
+            nn.Conv2d(input_channels, 64, kernel_size), # [N, 64, 26]
+            nn.ReLU(),
+            nn.Conv2d(64, 32, kernel_size), # [N, 32, 24]
+            nn.ReLU(),
+            nn.Conv2d(32, 16, kernel_size), # [N, 16, 22]
+            nn.ReLU(),
+            nn.Conv2d(16, 8, kernel_size),  # [N, 8, 20]
+            nn.ReLU(),
+        )
+
+        # Neural network classifier
+        self.classifier = nn.Sequential(
+            nn.Flatten(),         # [N, 8*20*20]
+            nn.Linear(8*20*20, 128),
+            nn.Dropout(),
+            nn.Linear(128, num_classes)
+        )
+
+        # Loss function
+        self.criterium = nn.CrossEntropyLoss()
+
+    def forward(self, x):
+        features = self.model(x)
+        out = self.classifier(features)
+        return out
+
+    def training_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("test_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
 
 # Define a simple two-layer GCN
-class GCN(torch.nn.Module):
-    def __init__(self):
+class GCN(L.LightningModule):
+    def __init__(
+        self,
+        lr: float = 1e-2,
+        features: int = 1433,
+        num_classes: int = 7,
+    ):
         super().__init__()
-        self.conv1 = GCNConv(1433, 32)  # Input: 1433 features, Output: 32 features
-        self.conv2 = GCNConv(32, 7)   # Output: 7 classes for classification
+
+        self.lr = lr
+
+        self.save_hyperparameters()
+
+        self.conv1 = GCNConv(features, 32)  # Input: 1433 features, Output: 32 features
+        self.conv2 = GCNConv(32, num_classes)   # Output: 7 classes for classification
+
+        self.criterium = nn.CrossEntropyLoss()
 
     def forward(self, x, edge_index):
         # Apply the first convolution and activation
@@ -26,159 +218,374 @@ class GCN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         return x
 
+    def training_step(self, batch, batch_idx):
+        data = batch
+        y_pred = self(data.x, data.edge_index)
+        loss = self.criterium(y_pred[data.train_mask], data.y[data.train_mask])
+        acc = (y_pred[data.train_mask].argmax(dim=1) == data.y[data.train_mask]).float().mean()
 
-class C8SteerableCNN(torch.nn.Module):
+        # Logging
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
-    def __init__(self, n_classes=2):
+        #self.logger.experiment.log({"logits": wandb.Histogram(y_pred.cpu().detach().numpy())})
+        return loss
 
-        super(C8SteerableCNN, self).__init__()
+    def test_step(self, batch, batch_idx) -> None:
+        data = batch
+        y_pred = self(data.x, data.edge_index)
+        loss = self.criterium(y_pred[data.test_mask], data.y[data.test_mask])
+        acc = (y_pred[data.test_mask].argmax(dim=1) == data.y[data.test_mask]).float().mean()
 
-        # the model is equivariant under rotations by 45 degrees, modelled by C8
+        # Logging
+        self.log("test_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+        self.log("test_acc", acc, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx) -> None:
+        data = batch
+        y_pred = self(data.x, data.edge_index)
+        loss = self.criterium(y_pred[data.val_mask], data.y[data.val_mask])
+        acc = (y_pred[data.val_mask].argmax(dim=1) == data.y[data.val_mask]).float().mean()
+
+        # Logging
+        self.log("val_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+        self.log("val_acc", acc, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
+
+# Define steerable CNN model
+class C8SteerableCNNOld(L.LightningModule):
+    def __init__(
+        self,
+        input_channels: int = 3,
+        num_classes: int = 2,
+        lr: float = 1e-3,
+    ):
+        super().__init__()
+
+        self.lr = lr
+
+        self.save_hyperparameters()
+
+        # Symmetry group C8
         self.r2_act = gspaces.rot2dOnR2(N=8)
 
-        # the input image is a scalar field, corresponding to the trivial representation
-        in_type = nn.FieldType(self.r2_act, [self.r2_act.trivial_repr])
-
-        # we store the input type for wrapping the images into a geometric tensor during the forward pass
-        self.input_type = in_type
-
-        # convolution 1
-        # first specify the output type of the convolutional layer
-        # we choose 24 feature fields, each transforming under the regular representation of C8
-        out_type = nn.FieldType(self.r2_act, 24*[self.r2_act.regular_repr])
-        self.block1 = nn.SequentialModule(
-            nn.MaskModule(in_type, 32, margin=1),
-            nn.R2Conv(in_type, out_type, kernel_size=7, padding=1, bias=False),
-            nn.InnerBatchNorm(out_type),
-            nn.ReLU(out_type, inplace=True)
+        # Input type (scalar field)
+        self.input_type = enn.FieldType(
+            self.r2_act,
+            input_channels * [self.r2_act.trivial_repr]
         )
 
-        # convolution 2
-        # the old output type is the input type to the next layer
+        # Steerable CNN layers
+        self.features = enn.SequentialModule(
+            enn.R2Conv(
+                self.input_type,
+                enn.FieldType(self.r2_act, 8 * [self.r2_act.regular_repr]),
+                kernel_size=3,
+                padding=0,
+                bias=False,
+            ),
+            enn.InnerBatchNorm(
+                enn.FieldType(self.r2_act, 8 * [self.r2_act.regular_repr])
+            ),
+            enn.ReLU(
+                enn.FieldType(self.r2_act, 8 * [self.r2_act.regular_repr]),
+                inplace=True,
+            ),
+
+            enn.R2Conv(
+                enn.FieldType(self.r2_act, 8 * [self.r2_act.regular_repr]),
+                enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr]),
+                kernel_size=3,
+                padding=0,
+                bias=False,
+            ),
+            enn.InnerBatchNorm(
+                enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr])
+            ),
+            enn.ReLU(
+                enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr]),
+                inplace=True,
+            ),
+
+            enn.R2Conv(
+                enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr]),
+                enn.FieldType(self.r2_act, 2 * [self.r2_act.regular_repr]),
+                kernel_size=3,
+                padding=0,
+                bias=False,
+            ),
+            enn.InnerBatchNorm(
+                enn.FieldType(self.r2_act, 2 * [self.r2_act.regular_repr])
+            ),
+            enn.ReLU(
+                enn.FieldType(self.r2_act, 2 * [self.r2_act.regular_repr]),
+                inplace=True,
+            ),
+        )
+
+        # Group pooling
+        self.gpool = enn.GroupPooling(
+            enn.FieldType(self.r2_act, 2 * [self.r2_act.regular_repr])
+        )
+
+        # Classifier
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(2 * 20 * 20, 128),
+            nn.Dropout(),
+            nn.Linear(128, num_classes)
+        )
+
+        self.criterium = nn.CrossEntropyLoss()
+
+    def forward(self, x):
+        x = enn.GeometricTensor(x, self.input_type)
+        x = self.features(x)
+        x = self.gpool(x)
+        x = self.classifier(x.tensor)
+        return x
+
+    def training_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("test_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
+
+# Define steerable CNN model
+class C8SteerableCNN(L.LightningModule):
+    def __init__(
+        self,
+        input_channels: int = 1,
+        num_classes: int = 10,
+        lr: float = 1e-3,
+    ):
+        super().__init__()
+
+        self.lr = lr
+
+        self.save_hyperparameters()
+
+        # Equivariance under rotations by 45 degrees
+        self.r2_act = gspaces.rot2dOnR2(N=8)
+
+        # Input type (scalar field)
+        self.input_type = enn.FieldType(
+            self.r2_act,
+            input_channels * [self.r2_act.trivial_repr]
+        )
+
+        # Convolution 1
+        out_type = enn.FieldType(
+            self.r2_act,
+            24 * [self.r2_act.regular_repr]
+        )
+        self.block1 = enn.SequentialModule(
+            enn.MaskModule(self.input_type, 28, margin=1),
+            enn.R2Conv(
+                self.input_type,
+                out_type,
+                kernel_size=7,
+                padding=1,
+                bias=False,
+            ),
+            enn.InnerBatchNorm(out_type),
+            enn.ReLU(out_type, inplace=True),
+        )
+
+        # Convolution 2
         in_type = self.block1.out_type
-        # the output type of the second convolution layer are 48 regular feature fields of C8
-        out_type = nn.FieldType(self.r2_act, 48*[self.r2_act.regular_repr])
-        self.block2 = nn.SequentialModule(
-            nn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
-            nn.InnerBatchNorm(out_type),
-            nn.ReLU(out_type, inplace=True)
+        out_type = enn.FieldType(
+            self.r2_act,
+            48 * [self.r2_act.regular_repr]
         )
-        self.pool1 = nn.SequentialModule(
-            nn.PointwiseAvgPoolAntialiased(out_type, sigma=0.66, stride=2)
+        self.block2 = enn.SequentialModule(
+            enn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
+            enn.InnerBatchNorm(out_type),
+            enn.ReLU(out_type, inplace=True),
+        )
+        self.pool1 = enn.SequentialModule(
+            enn.PointwiseAvgPoolAntialiased(out_type, sigma=0.66, stride=2)
         )
 
-        # convolution 3
-        # the old output type is the input type to the next layer
+        # Convolution 3
         in_type = self.block2.out_type
-        # the output type of the third convolution layer are 48 regular feature fields of C8
-        out_type = nn.FieldType(self.r2_act, 48*[self.r2_act.regular_repr])
-        self.block3 = nn.SequentialModule(
-            nn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
-            nn.InnerBatchNorm(out_type),
-            nn.ReLU(out_type, inplace=True)
+        out_type = enn.FieldType(
+            self.r2_act,
+            48 * [self.r2_act.regular_repr]
+        )
+        self.block3 = enn.SequentialModule(
+            enn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
+            enn.InnerBatchNorm(out_type),
+            enn.ReLU(out_type, inplace=True),
         )
 
-        # convolution 4
-        # the old output type is the input type to the next layer
+        # Convolution 4
         in_type = self.block3.out_type
-        # the output type of the fourth convolution layer are 96 regular feature fields of C8
-        out_type = nn.FieldType(self.r2_act, 96*[self.r2_act.regular_repr])
-        self.block4 = nn.SequentialModule(
-            nn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
-            nn.InnerBatchNorm(out_type),
-            nn.ReLU(out_type, inplace=True)
+        out_type = enn.FieldType(
+            self.r2_act,
+            96 * [self.r2_act.regular_repr]
         )
-        self.pool2 = nn.SequentialModule(
-            nn.PointwiseAvgPoolAntialiased(out_type, sigma=0.66, stride=2)
+        self.block4 = enn.SequentialModule(
+            enn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
+            enn.InnerBatchNorm(out_type),
+            enn.ReLU(out_type, inplace=True),
+        )
+        self.pool2 = enn.SequentialModule(
+            enn.PointwiseAvgPoolAntialiased(out_type, sigma=0.66, stride=2)
         )
 
-        # convolution 5
-        # the old output type is the input type to the next layer
+        # Convolution 5
         in_type = self.block4.out_type
-        # the output type of the fifth convolution layer are 96 regular feature fields of C8
-        out_type = nn.FieldType(self.r2_act, 96*[self.r2_act.regular_repr])
-        self.block5 = nn.SequentialModule(
-            nn.R2Conv(in_type, out_type, kernel_size=5, padding=2, bias=False),
-            nn.InnerBatchNorm(out_type),
-            nn.ReLU(out_type, inplace=True)
+        out_type = enn.FieldType(
+            self.r2_act,
+            96 * [self.r2_act.regular_repr]
+        )
+        self.block5 = enn.SequentialModule(
+            enn.R2Conv(in_type, out_type, kernel_size=3, padding=1, bias=False),
+            enn.InnerBatchNorm(out_type),
+            enn.ReLU(out_type, inplace=True),
         )
 
-        # convolution 6
-        # the old output type is the input type to the next layer
+        # Convolution 6
         in_type = self.block5.out_type
-        # the output type of the sixth convolution layer are 64 regular feature fields of C8
-        out_type = nn.FieldType(self.r2_act, 64*[self.r2_act.regular_repr])
-        self.block6 = nn.SequentialModule(
-            nn.R2Conv(in_type, out_type, kernel_size=5, padding=1, bias=False),
-            nn.InnerBatchNorm(out_type),
-            nn.ReLU(out_type, inplace=True)
+        out_type = enn.FieldType(
+            self.r2_act,
+            64 * [self.r2_act.regular_repr]
         )
-        self.pool3 = nn.PointwiseAvgPoolAntialiased(out_type, sigma=0.66, stride=1, padding=0)
+        self.block6 = enn.SequentialModule(
+            enn.R2Conv(in_type, out_type, kernel_size=3, padding=1, bias=False),
+            enn.InnerBatchNorm(out_type),
+            enn.ReLU(out_type, inplace=True),
+        )
 
-        self.gpool = nn.GroupPooling(out_type)
+        # Adaptive pooling to 1x1 before group pooling
+        self.adaptive_pool = enn.PointwiseAdaptiveAvgPool(out_type, output_size=1)
 
-        # number of output channels
+        self.gpool = enn.GroupPooling(
+            out_type
+        )
+
+        # Number of output channels
         c = self.gpool.out_type.size
 
-        # Fully Connected
-        self.fully_net = torch.nn.Sequential(
-            torch.nn.Linear(c, 64),
-            torch.nn.BatchNorm1d(64),
-            torch.nn.ELU(inplace=True),
-            torch.nn.Linear(64, n_classes),
+        # FC
+        self.fully_net = nn.Sequential(
+            nn.Linear(c, 64),
+            nn.BatchNorm1d(64),
+            nn.Dropout(),
+            nn.Linear(64, num_classes)
         )
 
-    def forward(self, input: torch.Tensor):
-        #print(f"Input shape: {input.shape}")
-        # wrap the input tensor in a GeometricTensor
-        # (associate it with the input type)
-        x = nn.GeometricTensor(input, self.input_type)
+        self.criterium = nn.CrossEntropyLoss()
 
-        #print(f"Input GeometricTensor shape: {x.shape}")
-
-        # apply each equivariant block
-
-        # Each layer has an input and an output type
-        # A layer takes a GeometricTensor in input.
-        # This tensor needs to be associated with the same representation of the layer's input type
-        #
-        # The Layer outputs a new GeometricTensor, associated with the layer's output type.
-        # As a result, consecutive layers need to have matching input/output types
+    def forward(self, x):
+        x = enn.GeometricTensor(x, self.input_type)
         x = self.block1(x)
-        #print(f"After block1 shape: {x.shape}")
         x = self.block2(x)
         x = self.pool1(x)
-
         x = self.block3(x)
         x = self.block4(x)
         x = self.pool2(x)
-
         x = self.block5(x)
         x = self.block6(x)
-
-        # pool over the spatial dimensions
-        x = self.pool3(x)
-
-        # pool over the group
+        x = self.adaptive_pool(x)
         x = self.gpool(x)
-
-        # unwrap the output GeometricTensor
-        # (take the Pytorch tensor and discard the associated representation)
-        x = x.tensor
-
-        # classify with the final fully connected layers)
-        x = self.fully_net(x.reshape(x.shape[0], -1))
-
+        x = self.fully_net(x.tensor.reshape(x.tensor.shape[0], -1))
         return x
 
-if __name__ == "__main__":
-    model = GCN()
-    x = torch.rand(1, 1433)  # Batch size of 1, 1433 features
-    edge_index = torch.tensor([[0], [0]])  # Dummy edge index
-    print(f"Output shape of model: {model(x, edge_index).shape}")
+    def training_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
 
-    #model = C8SteerableCNN(n_classes=2)
-    #model.eval()  # Set to evaluation mode to avoid batch norm issues with batch size 1
-    #x = torch.rand(1, 1, 32, 32)  # Batch size of 1, 1 channel, 32x32 image
-    #with torch.no_grad():
-    #    print(f"Output shape of C8SteerableCNN: {model(x).shape}")
+        # Logging
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def test_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("test_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterium(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # Logging
+        self.log("val_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("val_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
+        return loss
+
+    def configure_optimizers(self):
+        return optim.Adam(self.parameters(), lr=self.hparams.lr)
+
+
+if __name__ == "__main__":
+    print("Feedforward Neural Network:")
+    model = NN()
+    print(model)
+    print()
+
+    print("Convolutional Neural Network:")
+    model = CNN()
+    print(model)
+    print()
+
+    print("Graph Convolutional Network:")
+    model = GCN()
+    print(model)
+    print()
