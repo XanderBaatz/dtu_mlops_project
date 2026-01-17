@@ -41,8 +41,8 @@ class NN(LightningModule):
         logits = self(x)
         loss = self.loss_fn(logits, y)
         acc = (logits.argmax(1) == y).float().mean()
-        self.log(f"{stage}/loss", loss, prog_bar=True)
-        self.log(f"{stage}/acc", acc, prog_bar=True)
+        self.log(f"{stage}/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
+        self.log(f"{stage}/acc", acc, prog_bar=True, on_epoch=True, on_step=False)
         return loss
 
     def training_step(self, batch, batch_idx):
@@ -109,8 +109,8 @@ class CNN(LightningModule):
         logits = self(x)
         loss = self.loss_fn(logits, y)
         acc = (logits.argmax(1) == y).float().mean()
-        self.log(f"{stage}/loss", loss, prog_bar=True)
-        self.log(f"{stage}/acc", acc, prog_bar=True)
+        self.log(f"{stage}/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
+        self.log(f"{stage}/acc", acc, prog_bar=True, on_epoch=True, on_step=False)
         return loss
 
     def training_step(self, batch, batch_idx):
@@ -194,8 +194,8 @@ class C8SteerableCNN(LightningModule):
         logits = self(x)
         loss = self.loss_fn(logits, y)
         acc = (logits.argmax(1) == y).float().mean()
-        self.log(f"{stage}/loss", loss, prog_bar=True)
-        self.log(f"{stage}/acc", acc, prog_bar=True)
+        self.log(f"{stage}/loss", loss, prog_bar=True, on_epoch=True, on_step=False)
+        self.log(f"{stage}/acc", acc, prog_bar=True, on_epoch=True, on_step=False)
         return loss
 
     def training_step(self, batch, batch_idx):

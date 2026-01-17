@@ -11,7 +11,11 @@ from dotenv import load_dotenv
 
 import rootutils
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
+
+# Load environment variables (for wandb, etc.)
 load_dotenv()
+# Also try loading from wandb.env in the same directory
+load_dotenv(os.path.join(os.path.dirname(__file__), "wandb.env"))
 
 from src.dtu_mlops_project.data import RotatedFashionMNIST
 
