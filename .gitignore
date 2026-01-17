@@ -6,6 +6,10 @@ manual_test/
 # Ruff cache
 .ruff_cache
 
+# devcontainer backup
+.devcontainer_backup/
+.some_container/
+
 # other local dev info
 .vscode/
 
