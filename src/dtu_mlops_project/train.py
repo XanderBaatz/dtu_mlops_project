@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 import os
 import hydra
+import sys
 import torch
 import lightning as L
 
@@ -16,6 +17,13 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 load_dotenv()
 # Also try loading from wandb.env in the same directory
 load_dotenv(os.path.join(os.path.dirname(__file__), "wandb.env"))
+
+# Normalize W&B agent args: convert `--key=value` to `key=value` for Hydra
+if any(arg.startswith("--") and "=" in arg for arg in sys.argv[1:]):
+    sys.argv = [sys.argv[0]] + [
+        (arg[2:] if arg.startswith("--") and "=" in arg else arg)
+        for arg in sys.argv[1:]
+    ]
 
 from src.dtu_mlops_project.data import RotatedFashionMNIST
 

@@ -1,0 +1,37 @@
+# W&B Sweep Configuration
+# Initialize with: uv run wandb sweep configs/hparams_search/wandb_sweep.yaml
+# Then run agents with: uv run wandb agent <entity/project/sweep-id>
+
+#Command
+#first: uv run wandb sweep configs/hparams_search/wandb_sweep.yaml
+#uv run wandb agent xanderbaatz-danmarks-tekniske-universitet-dtu/dtu-mlops-project/ID --count 5
+
+project: dtu-mlops-project
+program: src/dtu_mlops_project/train.py
+command:
+  - uv
+  - run
+  - python
+  - src/dtu_mlops_project/train.py
+  - trainer.max_epochs=2
+  - model=cnn
+  - logger=wandb
+  - ${args}
+
+method: random
+metric:
+  name: val/acc
+  goal: maximize
+
+parameters:
+  model.optimizer.lr:
+    min: 0.0001
+    max: 0.01
+    distribution: log_uniform_values
+
+  model.optimizer.weight_decay:
+    min: 0.0
+    max: 0.001
+
+  data.batch_size:
+    values: [16, 32, 64]
