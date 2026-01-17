@@ -2,13 +2,18 @@
 {
     "name": "dtu_mlops_project",
 
-    "image": "python:3.12-bullseye",
+    // Official Dev Containers Python image (multi-arch: ARM + amd64)
+    "image": "mcr.microsoft.com/devcontainers/python:3.12-bullseye",
 
+
+    // Only force amd64 when running on Apple Silicon with x86-only deps
+    // Safe to remove later if everything supports ARM
     "runArgs": ["--platform=linux/amd64"],
 
     "features": {},
 
-    "postCreateCommand": "apt-get update && apt-get install -y gfortran build-essential pkg-config && bash .devcontainer/post_create.sh",
+    // Keep all logic in the script
+    "postCreateCommand": "bash .devcontainer/post_create.sh",
 
     "customizations": {
         "vscode": {
@@ -19,7 +24,11 @@
             "settings": {
                 "python.testing.pytestArgs": ["tests"],
                 "python.testing.unittestEnabled": false,
-                "python.testing.pytestEnabled": true
+                "python.testing.pytestEnabled": true,
+
+                // uv creates .venv by default
+                "python.defaultInterpreterPath": "/workspaces/dtu_mlops_project/.venv/bin/python",
+                "python.testing.pytestPath": "/workspaces/dtu_mlops_project/.venv/bin/pytest"
             }
         }
     }
