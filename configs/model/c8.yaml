@@ -1,0 +1,9 @@
+_target_: src.dtu_mlops_project.model.C8SteerableCNN
+
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 0.001
+
+net:
+  input_channels: 1
+  num_classes: 10
