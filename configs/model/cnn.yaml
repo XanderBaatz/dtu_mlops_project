@@ -1,0 +1,15 @@
+_target_: src.dtu_mlops_project.model.CNN
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: True
+  lr: 0.001
+  weight_decay: 0.0
+
+net:
+  input_channels: 1
+  kernel_size: 3
+  pooling_size: 2
+  stride: 1
+  padding: 0
+  num_classes: 10
