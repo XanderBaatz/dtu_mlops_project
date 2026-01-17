@@ -1,11 +1,19 @@
 #! /usr/bin/env bash
 
+set -e
+
 # Install system dependencies
-apt-get update && apt-get install -y gfortran
+sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+    gfortran \
+    build-essential \
+    ca-certificates \
+    curl \
+    && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.cargo/env
+export PATH="$HOME/.local/bin:$PATH"
+#source $HOME/.cargo/env
 
 # Install Dependencies
 uv sync --dev
