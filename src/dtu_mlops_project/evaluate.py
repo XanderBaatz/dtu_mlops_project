@@ -1,11 +1,14 @@
 import torch
 import typer
-#from dtu_mlops_project.data import corrupt_mnist
-from torch_geometric.datasets import Planetoid
-from dtu_mlops_project.model import GCN
-import typer
+from dtu_mlops_project.model import CNN
+from dtu_mlops_project.data import RotatedFashionMNIST
+from lightning.pytorch.loggers import CSVLogger
+from lightning.pytorch import Trainer
 from typing import Annotated
-import torch_geometric
+import pandas as pd
+import matplotlib.pyplot as plt
+
+plt.style.use("ggplot")
 
 app = typer.Typer()
 
@@ -23,30 +26,39 @@ def evaluate(
     print("Evaluating like my life depends on it")
     print(model_checkpoint)
 
-    model = GCN().to(DEVICE)
+    # DataModule
+    dm = RotatedFashionMNIST()
+    dm.prepare_data()
+    dm.setup(stage='test')
+
+    # Model
+    model = CNN(num_classes=dm.num_classes).to(DEVICE)
     model.load_state_dict(torch.load(model_checkpoint))
 
-    dataset = Planetoid(root="data", name="Cora")
+    # Logger
+    logger = CSVLogger("logs/", name="testing")
 
-    test_dataloader = torch_geometric.loader.DataLoader(dataset, batch_size=32, shuffle=True)
+    # Trainer
+    trainer = Trainer(
+        accelerator="auto",
+        logger=logger,
+    )
 
-    model.eval()
-    correct, total = 0, 0
-    for data in test_dataloader:
-        data = data.to(DEVICE)
-        with torch.no_grad():
-            y_pred = model(data.x, data.edge_index)
-        correct += (y_pred[data.test_mask].argmax(dim=1) == data.y[data.test_mask]).sum().item()
-        total += data.test_mask.sum().item()
+    # Evaluate
+    results = trainer.test(model, datamodule=dm)
+    print("Test Results:", results)
 
-    #for img, target in test_dataloader:
-    #    img, target = img.to(DEVICE), target.to(DEVICE)
-    #    with torch.no_grad():
-    #        y_pred = model(img)
-    #    correct += (y_pred.argmax(1) == target).float().sum().item()
-    #    total += target.size(0)
+    # Load metrics
+    metrics_df = pd.read_csv(f"{logger.log_dir}/metrics.csv")
 
-    print(f"Test Accuracy: {correct / total:.4f}")
+    # Plot metrics
+    if "test_loss_step" in metrics_df.columns and "test_acc_step" in metrics_df.columns:
+        fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+        axs[0].plot(metrics_df["test_loss_step"].dropna())
+        axs[0].set_title("Test loss")
+        axs[1].plot(metrics_df["test_acc_step"].dropna())
+        axs[1].set_title("Test accuracy")
+        fig.savefig("reports/figures/testing_statistics.pdf")
 
 if __name__ == "__main__":
     app()

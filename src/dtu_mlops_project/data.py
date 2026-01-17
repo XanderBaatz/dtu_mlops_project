@@ -1,7 +1,7 @@
 from pathlib import Path
 import lightning as L
 import torch
-
+from typing import Any, Dict, Optional, Tuple
 import typer
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -34,14 +34,12 @@ class RotatedFashionMNIST(L.LightningDataModule):
             self,
             data_dir: str = "data",
             batch_size: int = 32,
+            num_workers: int = 0,
             seed: int = 42
         ) -> None:
         super().__init__()
-        self.data_dir = data_dir
-        self.batch_size = batch_size
-        self.seed = seed
-        self.num_classes = 10
-        self.num_channels = 1  # Grayscale images
+
+        self.save_hyperparameters(logger=False)
 
         # Define the transform to rotate images by 45 degrees
         self.transform = torchvision.transforms.Compose([
@@ -49,31 +47,56 @@ class RotatedFashionMNIST(L.LightningDataModule):
             torchvision.transforms.ToTensor(),
         ])
 
-    def prepare_data(self):
-        # Download the dataset
-        FashionMNIST(root=self.data_dir, train=True, download=True)
-        FashionMNIST(root=self.data_dir, train=False, download=True)
+        #self.data_train: Optional[Dataset] = None
+        #self.data_val: Optional[Dataset] = None
+        #self.data_test: Optional[Dataset] = None
 
-    def setup(self, stage:str=None):
+        self.batch_size_per_device = batch_size
+
+    @property
+    def num_classes(self) -> int:
+        """Get the number of classes.
+
+        :return: The number of MNIST classes (10).
+        """
+        return 10
+
+    def prepare_data(self) -> None:
+        # Download the dataset
+        FashionMNIST(root=self.hparams.data_dir, train=True, download=True)
+        FashionMNIST(root=self.hparams.data_dir, train=False, download=True)
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        # Divide batch size by the number of devices.
+        if self.trainer is not None:
+            if self.hparams.batch_size % self.trainer.world_size != 0:
+                raise RuntimeError(
+                    f"Batch size ({self.hparams.batch_size}) is not divisible by the number of devices ({self.trainer.world_size})."
+                )
+            self.batch_size_per_device = self.hparams.batch_size // self.trainer.world_size
+
         if stage == 'fit' or stage is None:
-            dataset_full = FashionMNIST(root=self.data_dir, train=True, transform=self.transform)
+            dataset_full = FashionMNIST(root=self.hparams.data_dir, train=True, transform=self.transform)
             self.train_dataset, self.val_dataset = torch.utils.data.random_split(
                 dataset_full,
                 [50000, 10000],
-                generator=torch.Generator().manual_seed(self.seed)
+                generator=torch.Generator().manual_seed(42)
             )
 
         if stage == 'test':
-            self.test_dataset = FashionMNIST(root=self.data_dir, train=False, transform=self.transform)
+            self.test_dataset = FashionMNIST(root=self.hparams.data_dir, train=False, transform=self.transform)
 
         if stage == 'predict':
-            self.predict_dataset = FashionMNIST(root=self.data_dir, train=False, transform=self.transform)
+            self.predict_dataset = FashionMNIST(root=self.hparams.data_dir, train=False, transform=self.transform)
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, generator=torch.Generator().manual_seed(self.seed))
+        return DataLoader(self.train_dataset, batch_size=self.batch_size_per_device, num_workers=self.hparams.num_workers, shuffle=True)
+
+    def test_dataloader(self):
+        return DataLoader(self.test_dataset, batch_size=self.batch_size_per_device, num_workers=self.hparams.num_workers, shuffle=False)
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.batch_size)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size_per_device, num_workers=self.hparams.num_workers, shuffle=False)
 
 
 if __name__ == "__main__":
