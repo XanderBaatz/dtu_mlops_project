@@ -1,83 +1,121 @@
 from pathlib import Path
 import lightning as L
 import torch
-
-import typer
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-
-# https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/datasets/reddit.html#Reddit
-from torch_geometric.datasets import KarateClub
+from torch.utils.data import Dataset, DataLoader, Subset
 from torchvision.datasets import FashionMNIST
 import torchvision
 
+
 class MyDataset(Dataset):
-    """My custom dataset."""
+    """My custom dataset (not used yet)."""
 
     def __init__(self, data_path: Path) -> None:
         self.data_path = data_path
 
     def __len__(self) -> int:
-        """Return the length of the dataset."""
+        return 0
 
     def __getitem__(self, index: int):
-        """Return a given sample from the dataset."""
+        raise NotImplementedError
 
     def preprocess(self, output_folder: Path) -> None:
-        """Preprocess the raw data and save it to the output folder."""
+        raise NotImplementedError
 
 
-# For use with rotation equivariance models
-# https://lightning.ai/docs/pytorch/latest/data/datamodule.html#what-is-a-datamodule
+# Lightning DataModule
 class RotatedFashionMNIST(L.LightningDataModule):
     def __init__(
-            self,
-            data_dir: str = "data",
-            batch_size: int = 32,
-            seed: int = 42
-        ) -> None:
+        self,
+        data_dir: str = "data",
+        batch_size: int = 32,
+        seed: int = 42,
+        subset_fraction: float = 0.1,
+    ) -> None:
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
         self.seed = seed
-        self.num_classes = 10
-        self.num_channels = 1  # Grayscale images
+        self.subset_fraction = subset_fraction
 
-        # Define the transform to rotate images by 45 degrees
+        self.num_classes = 10
+        self.num_channels = 1  # grayscale
+
         self.transform = torchvision.transforms.Compose([
             torchvision.transforms.RandomRotation((45, 45)),
             torchvision.transforms.ToTensor(),
         ])
 
     def prepare_data(self):
-        # Download the dataset
-        FashionMNIST(root=self.data_dir, train=True, download=True)
-        FashionMNIST(root=self.data_dir, train=False, download=True)
+        FashionMNIST(self.data_dir, train=True, download=True)
+        FashionMNIST(self.data_dir, train=False, download=True)
 
-    def setup(self, stage:str=None):
-        if stage == 'fit' or stage is None:
-            dataset_full = FashionMNIST(root=self.data_dir, train=True, transform=self.transform)
-            self.train_dataset, self.val_dataset = torch.utils.data.random_split(
-                dataset_full,
-                [50000, 10000],
-                generator=torch.Generator().manual_seed(self.seed)
+    def setup(self, stage: str | None = None):
+        if stage in ("fit", None):
+            full_dataset = FashionMNIST(
+                root=self.data_dir,
+                train=True,
+                transform=self.transform,
             )
 
-        if stage == 'test':
-            self.test_dataset = FashionMNIST(root=self.data_dir, train=False, transform=self.transform)
+            n_total = len(full_dataset)
+            n_subset = int(n_total * self.subset_fraction)
 
-        if stage == 'predict':
-            self.predict_dataset = FashionMNIST(root=self.data_dir, train=False, transform=self.transform)
+            generator = torch.Generator().manual_seed(self.seed)
+            indices = torch.randperm(n_total, generator=generator)[:n_subset]
+
+            subset = Subset(full_dataset, indices)
+
+            # 90 / 10 train-val split
+            n_train = int(0.9 * len(subset))
+            n_val = len(subset) - n_train
+
+            self.train_dataset, self.val_dataset = torch.utils.data.random_split(
+                subset,
+                [n_train, n_val],
+                generator=generator,
+            )
+
+        if stage == "test":
+            self.test_dataset = FashionMNIST(
+                root=self.data_dir,
+                train=False,
+                transform=self.transform,
+            )
+
+        if stage == "predict":
+            self.predict_dataset = FashionMNIST(
+                root=self.data_dir,
+                train=False,
+                transform=self.transform,
+            )
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, generator=torch.Generator().manual_seed(self.seed))
+        return DataLoader(
+            self.train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=5,
+            persistent_workers=True,
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.batch_size)
+        return DataLoader(
+            self.val_dataset,
+            batch_size=self.batch_size,
+            num_workers=5,
+            persistent_workers=True,
+        )
+
+    def test_dataloader(self):
+        return DataLoader(
+            self.test_dataset,
+            batch_size=self.batch_size,
+            num_workers=5,
+            persistent_workers=True,
+        )
 
 
 if __name__ == "__main__":
-    #typer.run(preprocess)
-    #dataset = Planetoid(root="data", name="Cora")
-    ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
-    print(len(ds.classes))
+    dm = RotatedFashionMNIST(batch_size=32, subset_fraction=0.05)
+    dm.prepare_data()
+    dm.setup("fit")

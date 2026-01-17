@@ -1,4 +1,4 @@
-from dtu_mlops_project.model import GCN, Model, C8SteerableCNN, CNN
+from dtu_mlops_project.model import Model, C8SteerableCNN, CNN
 from dtu_mlops_project.data import RotatedFashionMNIST
 from lightning.pytorch.loggers import CSVLogger
 from lightning.pytorch import Trainer
