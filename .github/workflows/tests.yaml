@@ -39,7 +39,6 @@ jobs:
         run: |
           uv venv
           
-          #what
           uv sync
           
           uv pip install pytest coverage
