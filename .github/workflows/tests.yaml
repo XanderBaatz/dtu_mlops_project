@@ -33,11 +33,10 @@ jobs:
         run: brew install gcc || true
 
       - name: Install dependencies
-
         run: |
-          uv pip install numpy cython setuptools wheel
-          uv pip install --no-build-isolation -e .
-          uv pip install pytest coverage
+          uv pip install --system numpy cython setuptools wheel
+          uv pip install --system --no-build-isolation -e .
+          uv pip install --system pytest coverage
 
       - name: Run tests & coverage
         run: |
