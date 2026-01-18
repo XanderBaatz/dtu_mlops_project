@@ -20,30 +20,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 1. Setup Fortran
+      - name: Setup Fortran
+        uses: fortra/setup-fortran@v1
+
+      # 2. Install uv
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
       - name: Set up Python
-        run: uv python install 3.11
+        run: uv python install ${{ matrix.python-version }}
 
-      - name: Install Fortran Compiler (needed for py3nj / escnn)
-        if: runner.os == 'macOS'
-        run: brew install gcc || true
-
+      # 3. Install dependencies (we use bash for consistency)
       - name: Install dependencies
+        shell: bash
         run: |
           uv venv
+          # Install build tools first
+          uv pip install numpy cython setuptools wheel meson-python ninja
           
-          uv pip install numpy cython setuptools wheel meson-python ninja         
-
+          # Install the project without build isolation so it uses our tools
           uv pip install --no-build-isolation -e .
           
+          # Test tools
           uv pip install pytest coverage
 
+      # 4. Run tests
       - name: Run tests & coverage
+        shell: bash
         run: |
-
           uv run coverage run -m pytest tests/
           uv run coverage report -m
