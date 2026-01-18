@@ -5,6 +5,7 @@ build-backend = "uv_build"
 [project]
 name = "dtu_mlops_project"
 version = "0.0.1"
+license = { text = "MIT" }
 description = "DTU machine learning operations project"
 authors = [
   { name = "group80", email = "your@email.com" },
