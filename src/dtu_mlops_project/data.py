@@ -35,7 +35,8 @@ class RotatedFashionMNIST(L.LightningDataModule):
             data_dir: str = "data",
             batch_size: int = 32,
             num_workers: int = 0,
-            seed: int = 42
+            seed: int = 42,
+            subset_fraction: float = 1.0
         ) -> None:
         super().__init__()
 
@@ -83,8 +84,29 @@ class RotatedFashionMNIST(L.LightningDataModule):
                 generator=torch.Generator().manual_seed(42)
             )
 
+            # Apply subset if specified
+            if self.hparams.subset_fraction < 1.0:
+                train_size = int(len(self.train_dataset) * self.hparams.subset_fraction)
+                val_size = int(len(self.val_dataset) * self.hparams.subset_fraction)
+                self.train_dataset = torch.utils.data.Subset(
+                    self.train_dataset,
+                    torch.randperm(len(self.train_dataset), generator=torch.Generator().manual_seed(self.hparams.seed))[:train_size]
+                )
+                self.val_dataset = torch.utils.data.Subset(
+                    self.val_dataset,
+                    torch.randperm(len(self.val_dataset), generator=torch.Generator().manual_seed(self.hparams.seed))[:val_size]
+                )
+
         if stage == 'test':
             self.test_dataset = FashionMNIST(root=self.hparams.data_dir, train=False, transform=self.transform)
+
+            # Apply subset if specified
+            if self.hparams.subset_fraction < 1.0:
+                test_size = int(len(self.test_dataset) * self.hparams.subset_fraction)
+                self.test_dataset = torch.utils.data.Subset(
+                    self.test_dataset,
+                    torch.randperm(len(self.test_dataset), generator=torch.Generator().manual_seed(self.hparams.seed))[:test_size]
+                )
 
         if stage == 'predict':
             self.predict_dataset = FashionMNIST(root=self.hparams.data_dir, train=False, transform=self.transform)
