@@ -1,85 +1,111 @@
 from typing import Any, Dict, List
-import os
-import hydra
-import sys
-import torch
-import lightning as L
+from loguru import logger
 
-from lightning import Trainer, Callback, LightningModule
+import os
+
+import hydra
+import lightning as L
+import torch
+import matplotlib.pyplot as plt
+
+from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 from dotenv import load_dotenv
 
 import rootutils
+
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
-
-# Load environment variables (for wandb, etc.)
 load_dotenv()
-# Also try loading from wandb.env in the same directory
-load_dotenv(os.path.join(os.path.dirname(__file__), "wandb.env"))
 
-# Normalize W&B agent args: convert `--key=value` to `key=value` for Hydra
-if any(arg.startswith("--") and "=" in arg for arg in sys.argv[1:]):
-    sys.argv = [sys.argv[0]] + [
-        (arg[2:] if arg.startswith("--") and "=" in arg else arg)
-        for arg in sys.argv[1:]
-    ]
+plt.style.use("ggplot")
 
-from src.dtu_mlops_project.data import RotatedFashionMNIST
-
-# -------------------------
-# Device
-# -------------------------
-DEVICE = (
+# Device configuration
+DEVICE = torch.device(
     "cuda" if torch.cuda.is_available()
     else "mps" if torch.backends.mps.is_available()
     else "cpu"
 )
 
+# WandB configuration
+api_key = os.getenv("WANDB_API_KEY")
+wandb_project = os.getenv("WANDB_PROJECT")
+wandb_entity = os.getenv("WANDB_ENTITY")
+
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
 def train(cfg: DictConfig) -> Dict[str, Any] | None:
 
+    # Seed
     if cfg.get("seed"):
-        L.seed_everything(cfg.seed, workers=True)
+        L.seed_everything(seed=cfg.seed)
 
-    # Data
-    datamodule = hydra.utils.instantiate(cfg.data)
+    # Instantiate datamodule
+    logger.info(f"Instantiating datamodule <{cfg.data._target_}>")
+    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
-    # Model (manual instantiation avoids Hydra recursion bugs)
-    target = cfg.model._target_
-    kwargs = {k: v for k, v in cfg.model.items() if k != "_target_"}
-    module_name, class_name = target.rsplit(".", 1)
-
-    import importlib
-    model_cls = getattr(importlib.import_module(module_name), class_name)
-    model: LightningModule = model_cls(**kwargs)
+    # Instantiate model
+    logger.info(f"Instantiating model <{cfg.model._target_}>")
+    model: LightningModule = hydra.utils.instantiate(cfg.model)
 
     # Callbacks
-    callbacks: List[Callback] = [
-        hydra.utils.instantiate(cb) for cb in cfg.get("callbacks", {}).values()
-    ]
+    logger.info("Instantiating callbacks...")
+    callbacks: List[Callback] = []
+    for _, cb_conf in cfg.get("callbacks", {}).items():
+        callbacks.append(hydra.utils.instantiate(cb_conf))
 
-    # Loggers (WandB safe)
-    loggers: List[Logger] = [
-        hydra.utils.instantiate(lg) for lg in cfg.get("logger", {}).values()
-    ]
+    # Logger
+    logger.info("Instantiating loggers...")
+    loggers: List[Logger] = []
+    for _, lg_conf in cfg.get("logger", {}).items():
+        loggers.append(hydra.utils.instantiate(lg_conf))
 
+    # Trainer
+    logger.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(
         cfg.trainer,
         callbacks=callbacks,
         logger=loggers,
-        accelerator=DEVICE,
     )
 
+    # Training
     if cfg.get("train", True):
-        trainer.fit(model, datamodule)
+        logger.info("Starting training...")
+        trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
 
+    # Testing
     if cfg.get("test", True):
-        trainer.test(model, datamodule)
-        return trainer.callback_metrics
+        logger.info("Starting testing...")
+        test_metrics: Dict[str, Any] = {}
+        #ckpt_path = None
+        #for cb in callbacks:
+        #    if isinstance(cb, ModelCheckpoint):
+        #        ckpt_path = cb.best_model_path or None
+        #trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
+        trainer.test(model=model, datamodule=datamodule)
+        test_metrics = trainer.callback_metrics
+
+        return test_metrics
 
     return None
+
+    # Plot metrics
+    if "train_loss_epoch" in metrics_df.columns and "train_acc_epoch" in metrics_df.columns:
+        fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+        axs[0].plot(metrics_df["train_loss_epoch"].dropna())
+        axs[0].set_title("Train loss")
+        axs[1].plot(metrics_df["train_acc_epoch"].dropna())
+        axs[1].set_title("Training accuracy")
+        fig.savefig(f"{figures_path}/training_statistics.pdf")
+
+    # Plot validation accuracy and loss if available
+    if "val_loss_epoch" in metrics_df.columns and "val_acc_epoch" in metrics_df.columns:
+        fig, axs = plt.subplots(1, 2, figsize=(15, 5))
+        axs[0].plot(metrics_df["val_loss_epoch"].dropna())
+        axs[0].set_title("Validation loss")
+        axs[1].plot(metrics_df["val_acc_epoch"].dropna())
+        axs[1].set_title("Validation accuracy")
+        fig.savefig(f"{figures_path}/validation_statistics.pdf")
 
 
 if __name__ == "__main__":

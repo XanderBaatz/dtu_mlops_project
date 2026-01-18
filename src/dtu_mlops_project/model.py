@@ -1,215 +1,371 @@
-from typing import Any, Dict, Tuple
-
-import torch
+from torch_geometric.nn import GCNConv
 from torch import nn, optim
-import lightning as L
-from lightning import LightningModule
-
 from escnn import gspaces
 from escnn import nn as enn
+from typing import Any, Dict, Tuple
+import lightning as L
+from lightning import LightningModule
+from torchmetrics import MaxMetric, MeanMetric
+from torchmetrics.classification.accuracy import Accuracy
+import torch
+import wandb
 
-import hydra
-from omegaconf import DictConfig
-
-
-# -------------------------
-# Simple Feedforward NN
-# -------------------------
-class NN(LightningModule):
-    def __init__(
-        self,
-        lr: float = 1e-3,
-        num_classes: int = 10,
-    ):
+# Base model class example (Pytorch Lightning)
+# Inspired by https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
+class Model(L.LightningModule):
+    def __init__(self):
         super().__init__()
+
         self.save_hyperparameters(logger=False)
 
+        self.model = ...  # Define your model architecture here
+
+        self.criterion = ... # Define your loss function here
+
+    def forward(self, x):
+        raise NotImplementedError("Forward method not implemented.")
+
+    def training_step(self, batch, batch_idx):
+        raise NotImplementedError("Training step not implemented.")
+
+    def test_step(self, batch, batch_idx):
+        raise NotImplementedError("Test step not implemented.")
+
+    def validation_step(self, batch, batch_idx):
+        raise NotImplementedError("Validation step not implemented.")
+
+    def configure_optimizers(self):
+        raise NotImplementedError("Optimizer configuration not implemented.")
+
+
+# Define a simple feedforward neural network
+class NN(L.LightningModule):
+    def __init__(
+        self,
+        input_size: int = 28*28,
+        hidden_size1: int = 128,
+        hidden_size2: int = 64,
+        output_size: int = 10,
+        lr: float = 1e-2,
+    ):
+        super().__init__()
+
+        self.lr = lr
+
+        # Save hyperparameters
+        self.save_hyperparameters(logger=False)
+
+        # Model
         self.model = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(28 * 28, 128),
+            nn.Linear(input_size, hidden_size1),
             nn.ReLU(),
-            nn.Linear(128, num_classes),
+            nn.Linear(hidden_size1, hidden_size2),
+            nn.ReLU(),
+            nn.Linear(hidden_size2, output_size)
         )
 
-        self.loss_fn = nn.CrossEntropyLoss()
+        # Loss function
+        self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, x):
         return self.model(x)
 
-    def _step(self, batch, stage: str):
-        x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = (logits.argmax(1) == y).float().mean()
-        self.log(f"{stage}/loss", loss, prog_bar=True, on_epoch=True, on_step=False, batch_size=x.size(0))
-        self.log(f"{stage}/acc", acc, prog_bar=True, on_epoch=True, on_step=False, batch_size=x.size(0))
+    def training_step(self, batch, batch_idx):
+        inputs, targets = batch
+        y_pred = self(inputs)
+        loss = self.criterion(y_pred, targets)
+        acc = (y_pred.argmax(1) == targets).float().mean()
+
+        # Logging
+        self.log("train_loss", loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        self.log("train_acc", acc, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+
         return loss
 
-    def training_step(self, batch, batch_idx):
-        return self._step(batch, "train")
+    def test_step(self, batch, batch_idx):
+        inputs, targets = batch
+        y_pred = self(inputs)
+        loss = self.criterion(y_pred, targets)
+        acc = (y_pred.argmax(1) == targets).float().mean()
+
+        # Logging
+        self.log("test_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+        self.log("test_acc", acc, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+
+        return loss
 
     def validation_step(self, batch, batch_idx):
-        self._step(batch, "val")
+        inputs, targets = batch
+        y_pred = self(inputs)
+        loss = self.criterion(y_pred, targets)
+        acc = (y_pred.argmax(1) == targets).float().mean()
 
-    def test_step(self, batch, batch_idx):
-        self._step(batch, "test")
+        # Logging
+        self.log("val_loss", loss, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+        self.log("val_acc", acc, prog_bar=True, on_step=True, on_epoch=True, logger=True)
+
+        return loss
 
     def configure_optimizers(self):
         return optim.Adam(self.parameters(), lr=self.hparams.lr)
 
 
-# -------------------------
-# Simple CNN
-# -------------------------
-class CNN(LightningModule):
+# Define a simple CNN model
+class CNN(L.LightningModule):
     def __init__(
         self,
-        optimizer: Dict[str, Any] | None = None,
-        net: Dict[str, Any] | None = None,
-        num_classes: int = 10,
+        net: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
     ):
         super().__init__()
 
-        # net is intentionally ignored (kept for Hydra compatibility)
-
-        if isinstance(optimizer, DictConfig):
-            optimizer = dict(optimizer)
-
-        if optimizer is None:
-            optimizer = {
-                "_target_": "torch.optim.Adam",
-                "_partial_": True,
-                "lr": 1e-3,
-            }
-
         self.save_hyperparameters(logger=False)
 
-        self.features = nn.Sequential(
-            nn.Conv2d(1, 8, 3, padding=1),
+        # CNN model
+        self.model = nn.Sequential(
+            nn.Conv2d(self.hparams.net.input_channels, 8, self.hparams.net.kernel_size, padding=self.hparams.net.padding),
             nn.ReLU(),
             nn.MaxPool2d(2),
 
-            nn.Conv2d(8, 16, 3, padding=1),
+            nn.Conv2d(8, 16, self.hparams.net.kernel_size, padding=self.hparams.net.padding),
             nn.ReLU(),
             nn.MaxPool2d(2),
         )
 
+        # Neural network classifier
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(16 * 7 * 7, num_classes),
+            nn.Linear(16 * 7 * 7, self.hparams.net.num_classes)
         )
 
-        self.loss_fn = nn.CrossEntropyLoss()
+        # Loss function
+        self.criterion = nn.CrossEntropyLoss()
+
+        # metric objects for calculating and averaging accuracy across batches
+        self.train_acc = Accuracy(task="multiclass", num_classes=self.hparams.net.num_classes)
+        self.val_acc = Accuracy(task="multiclass", num_classes=self.hparams.net.num_classes)
+        self.test_acc = Accuracy(task="multiclass", num_classes=self.hparams.net.num_classes)
+
+        # for averaging loss across batches
+        self.train_loss = MeanMetric()
+        self.val_loss = MeanMetric()
+        self.test_loss = MeanMetric()
+
+        # for tracking best so far validation accuracy
+        self.val_acc_best = MaxMetric()
 
     def forward(self, x):
-        return self.classifier(self.features(x))
+        features = self.model(x)
+        out = self.classifier(features)
+        return out
 
-    def _step(self, batch, stage):
-        x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = (logits.argmax(1) == y).float().mean()
-        self.log(f"{stage}/loss", loss, prog_bar=True, on_epoch=True, on_step=False, batch_size=x.size(0))
-        self.log(f"{stage}/acc", acc, prog_bar=True, on_epoch=True, on_step=False, batch_size=x.size(0))
+    def on_train_start(self) -> None:
+        """Lightning hook that is called when training begins."""
+        # by default lightning executes validation step sanity checks before training starts,
+        # so it's worth to make sure validation metrics don't store results from these checks
+        self.val_loss.reset()
+        self.val_acc.reset()
+        self.val_acc_best.reset()
+
+    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterion(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # update and log metrics
+        self.train_loss(loss)
+        self.train_acc(y_pred, target)
+        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+
         return loss
 
-    def training_step(self, batch, batch_idx):
-        return self._step(batch, "train")
+    def on_train_epoch_end(self) -> None:
+        "Lightning hook that is called when a training epoch ends."
+        pass
 
-    def validation_step(self, batch, batch_idx):
-        self._step(batch, "val")
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterion(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
 
-    def test_step(self, batch, batch_idx):
-        self._step(batch, "test")
+        # update and log metrics
+        self.test_loss(loss)
+        self.test_acc(y_pred, target)
+        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
-    def configure_optimizers(self):
-        cfg = self.hparams.optimizer
-        if cfg.get("_partial_", False):
-            opt_fn = hydra.utils.instantiate(cfg)
-            return opt_fn(self.parameters())
-        return hydra.utils.instantiate(cfg, params=self.parameters())
+        return loss
 
-# -------------------------
-# VERY SMALL C8 STEERABLE CNN
-# -------------------------
-class C8SteerableCNN(LightningModule):
+    def on_test_epoch_end(self) -> None:
+        """Lightning hook that is called when a test epoch ends."""
+        pass
+
+    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterion(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # update and log metrics
+        self.val_loss(loss)
+        self.val_acc(y_pred, target)
+        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+
+        return loss
+
+    def on_validation_epoch_end(self) -> None:
+        "Lightning hook that is called when a validation epoch ends."
+        acc = self.val_acc.compute()  # get current val acc
+        self.val_acc_best(acc)  # update best so far val acc
+        # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
+        # otherwise metric would be reset by lightning after each epoch
+        self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+
+    def configure_optimizers(self) -> Dict[str, Any]:
+        optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
+        return {"optimizer": optimizer}
+
+
+# Define steerable CNN model
+class C8SteerableCNN(L.LightningModule):
     def __init__(
         self,
-        optimizer: Dict[str, Any] | None = None,
-        net: Dict[str, Any] | None = None,
+        net: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
     ):
         super().__init__()
 
-        # Convert DictConfig to dict if necessary
-        if isinstance(optimizer, DictConfig):
-            optimizer = dict(optimizer)
-        if isinstance(net, DictConfig):
-            net = dict(net)
-
-        # Default net config if not provided
-        if net is None:
-            net = {
-                "input_channels": 1,
-                "num_classes": 10,
-            }
-
-        # Default optimizer config if not provided
-        if optimizer is None:
-            optimizer = {
-                "_target_": "torch.optim.Adam",
-                "_partial_": True,
-                "lr": 1e-3,
-            }
-
         self.save_hyperparameters(logger=False)
 
-        # Extract net parameters
-        input_channels = net.get("input_channels", 1)
-        num_classes = net.get("num_classes", 10)
-
+        # Model
         self.r2_act = gspaces.rot2dOnR2(N=8)
-        self.input_type = enn.FieldType(self.r2_act, input_channels * [self.r2_act.trivial_repr])
+        self.input_type = enn.FieldType(self.r2_act, self.hparams.net.input_channels * [self.r2_act.trivial_repr])
 
         out_type = enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr])
 
         self.block = enn.SequentialModule(
-            enn.R2Conv(self.input_type, out_type, kernel_size=3, padding=1, bias=False),
+            enn.R2Conv(self.input_type, out_type, kernel_size=self.hparams.net.kernel_size, padding=self.hparams.net.padding, bias=False),
             enn.ReLU(out_type, inplace=True),
-            enn.PointwiseMaxPool(out_type, 2),
+            enn.PointwiseMaxPool(out_type, self.hparams.net.pooling_size),
             enn.GroupPooling(out_type),
         )
 
-        # After MaxPool2d(2): 28x28 -> 14x14, and GroupPooling reduces 4*8 -> 4 channels
-        self.classifier = nn.Linear(4 * 14 * 14, num_classes)
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(4 * 14 * 14, self.hparams.net.num_classes)
+        )
+
+        # Loss function
+        self.criterion = nn.CrossEntropyLoss()
+
+        # metric objects for calculating and averaging accuracy across batches
+        self.train_acc = Accuracy(task="multiclass", num_classes=self.hparams.net.num_classes)
+        self.val_acc = Accuracy(task="multiclass", num_classes=self.hparams.net.num_classes)
+        self.test_acc = Accuracy(task="multiclass", num_classes=self.hparams.net.num_classes)
+
+        # for averaging loss across batches
+        self.train_loss = MeanMetric()
+        self.val_loss = MeanMetric()
+        self.test_loss = MeanMetric()
+
+        # for tracking best so far validation accuracy
+        self.val_acc_best = MaxMetric()
 
     def forward(self, x):
         x = enn.GeometricTensor(x, self.input_type)
         x = self.block(x)
-        x = self.classifier(x.tensor.flatten(1))
-        return x
+        x = x.tensor
+        out = self.classifier(x)
+        return out
 
-    def _step(self, batch, stage):
-        x, y = batch
-        logits = self(x)
-        loss = self.loss_fn(logits, y)
-        acc = (logits.argmax(1) == y).float().mean()
-        self.log(f"{stage}/loss", loss, prog_bar=True, on_epoch=True, on_step=False, batch_size=x.size(0))
-        self.log(f"{stage}/acc", acc, prog_bar=True, on_epoch=True, on_step=False, batch_size=x.size(0))
+    def on_train_start(self) -> None:
+        """Lightning hook that is called when training begins."""
+        # by default lightning executes validation step sanity checks before training starts,
+        # so it's worth to make sure validation metrics don't store results from these checks
+        self.val_loss.reset()
+        self.val_acc.reset()
+        self.val_acc_best.reset()
+
+    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterion(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # update and log metrics
+        self.train_loss(loss)
+        self.train_acc(y_pred, target)
+        self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/acc", self.train_acc, on_step=False, on_epoch=True, prog_bar=True)
+
         return loss
 
-    def training_step(self, batch, batch_idx):
-        return self._step(batch, "train")
+    def on_train_epoch_end(self) -> None:
+        "Lightning hook that is called when a training epoch ends."
+        pass
 
-    def validation_step(self, batch, batch_idx):
-        self._step(batch, "val")
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterion(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
 
-    def test_step(self, batch, batch_idx):
-        self._step(batch, "test")
+        # update and log metrics
+        self.test_loss(loss)
+        self.test_acc(y_pred, target)
+        self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/acc", self.test_acc, on_step=False, on_epoch=True, prog_bar=True)
 
-    def configure_optimizers(self):
-        cfg = self.hparams.optimizer
-        if cfg.get("_partial_", False):
-            opt_fn = hydra.utils.instantiate(cfg)
-            return opt_fn(self.parameters())
-        return hydra.utils.instantiate(cfg, params=self.parameters())
+        return loss
+
+    def on_test_epoch_end(self) -> None:
+        """Lightning hook that is called when a test epoch ends."""
+        pass
+
+    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> None:
+        data, target = batch
+        y_pred = self(data)
+        loss = self.criterion(y_pred, target)
+        acc = (y_pred.argmax(1) == target).float().mean()
+
+        # update and log metrics
+        self.val_loss(loss)
+        self.val_acc(y_pred, target)
+        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/acc", self.val_acc, on_step=False, on_epoch=True, prog_bar=True)
+
+        return loss
+
+    def on_validation_epoch_end(self) -> None:
+        "Lightning hook that is called when a validation epoch ends."
+        acc = self.val_acc.compute()  # get current val acc
+        self.val_acc_best(acc)  # update best so far val acc
+        # log `val_acc_best` as a value through `.compute()` method, instead of as a metric object
+        # otherwise metric would be reset by lightning after each epoch
+        self.log("val/acc_best", self.val_acc_best.compute(), sync_dist=True, prog_bar=True)
+
+    def configure_optimizers(self) -> Dict[str, Any]:
+        optimizer = self.hparams.optimizer(params=self.trainer.model.parameters())
+        return {"optimizer": optimizer}
+
+
+if __name__ == "__main__":
+    print("Feedforward Neural Network:")
+    model = NN()
+    print(model)
+    print()
+
+    print("Convolutional Neural Network:")
+    model = CNN()
+    print(model)
+    print()
+
+    print("Steerable CNN:")
+    model = C8SteerableCNN()
+    print(model)
+    print()

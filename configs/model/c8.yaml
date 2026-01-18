@@ -8,6 +8,10 @@ optimizer:
 
 net:
   input_channels: 1
+  kernel_size: 3
+  pooling_size: 2
+  stride: 1
+  padding: 1
   num_classes: 10
 
 #Usage is
