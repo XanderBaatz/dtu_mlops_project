@@ -34,11 +34,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install numpy cython setuptools wheel --break-system-packages
-          uv pip install --no-build-isolation -e . --break-system-packages
-          uv pip install pytest coverage --break-system-packages
+
+          uv venv
+
+          uv pip install numpy cython setuptools wheel
+          
+          uv pip install --no-build-isolation -e .
+          uv pip install pytest coverage
 
       - name: Run tests & coverage
         run: |
+
           uv run coverage run -m pytest tests/
           uv run coverage report -m
