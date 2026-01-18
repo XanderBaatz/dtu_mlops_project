@@ -12,13 +12,7 @@ class TestRotatedFashionMNIST:
     @pytest.fixture
     def data_module(self, tmp_path):
         """Create a RotatedFashionMNIST instance with temporary data directory."""
-        return RotatedFashionMNIST(
-            data_dir=str(tmp_path),
-            batch_size=32,
-            num_workers=0,
-            seed=42,
-            subset_fraction=1.0
-        )
+        return RotatedFashionMNIST(data_dir=str(tmp_path), batch_size=32, num_workers=0, seed=42, subset_fraction=1.0)
 
     def test_initialization(self, data_module):
         """Test that RotatedFashionMNIST initializes correctly."""
@@ -41,32 +35,32 @@ class TestRotatedFashionMNIST:
     def test_setup_fit_stage(self, data_module):
         """Test setup method with fit stage."""
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
-        assert hasattr(data_module, 'train_dataset')
-        assert hasattr(data_module, 'val_dataset')
+        assert hasattr(data_module, "train_dataset")
+        assert hasattr(data_module, "val_dataset")
         assert len(data_module.train_dataset) == 50000
         assert len(data_module.val_dataset) == 10000
 
     def test_setup_test_stage(self, data_module):
         """Test setup method with test stage."""
         data_module.prepare_data()
-        data_module.setup(stage='test')
+        data_module.setup(stage="test")
 
-        assert hasattr(data_module, 'test_dataset')
+        assert hasattr(data_module, "test_dataset")
         assert len(data_module.test_dataset) == 10000
 
     def test_setup_predict_stage(self, data_module):
         """Test setup method with predict stage."""
         data_module.prepare_data()
-        data_module.setup(stage='predict')
+        data_module.setup(stage="predict")
 
-        assert hasattr(data_module, 'predict_dataset')
+        assert hasattr(data_module, "predict_dataset")
 
     def test_train_dataloader(self, data_module):
         """Test train_dataloader returns a valid DataLoader."""
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
         train_loader = data_module.train_dataloader()
         assert isinstance(train_loader, DataLoader)
@@ -75,7 +69,7 @@ class TestRotatedFashionMNIST:
     def test_val_dataloader(self, data_module):
         """Test val_dataloader returns a valid DataLoader."""
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
         val_loader = data_module.val_dataloader()
         assert isinstance(val_loader, DataLoader)
@@ -84,7 +78,7 @@ class TestRotatedFashionMNIST:
     def test_test_dataloader(self, data_module):
         """Test test_dataloader returns a valid DataLoader."""
         data_module.prepare_data()
-        data_module.setup(stage='test')
+        data_module.setup(stage="test")
 
         test_loader = data_module.test_dataloader()
         assert isinstance(test_loader, DataLoader)
@@ -93,14 +87,10 @@ class TestRotatedFashionMNIST:
     def test_subset_fraction(self, tmp_path):
         """Test that subset_fraction correctly reduces dataset size."""
         data_module = RotatedFashionMNIST(
-            data_dir=str(tmp_path),
-            batch_size=32,
-            num_workers=0,
-            seed=42,
-            subset_fraction=0.1
+            data_dir=str(tmp_path), batch_size=32, num_workers=0, seed=42, subset_fraction=0.1
         )
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
         expected_train_size = int(50000 * 0.1)
         expected_val_size = int(10000 * 0.1)
@@ -111,7 +101,7 @@ class TestRotatedFashionMNIST:
     def test_batch_loading(self, data_module):
         """Test that batches can be loaded from dataloaders."""
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
         train_loader = data_module.train_dataloader()
         batch = next(iter(train_loader))
@@ -127,7 +117,7 @@ class TestRotatedFashionMNIST:
     def test_transform_applied(self, data_module):
         """Test that transform is applied to images."""
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
         train_loader = data_module.train_dataloader()
         images, _ = next(iter(train_loader))
@@ -142,13 +132,9 @@ class TestRotatedFashionMNIST:
         batch_sizes = [16, 32, 64]
 
         for batch_size in batch_sizes:
-            data_module = RotatedFashionMNIST(
-                data_dir=str(tmp_path),
-                batch_size=batch_size,
-                num_workers=0
-            )
+            data_module = RotatedFashionMNIST(data_dir=str(tmp_path), batch_size=batch_size, num_workers=0)
             data_module.prepare_data()
-            data_module.setup(stage='fit')
+            data_module.setup(stage="fit")
 
             train_loader = data_module.train_dataloader()
             batch_images, _ = next(iter(train_loader))
@@ -158,13 +144,9 @@ class TestRotatedFashionMNIST:
         """Test that train/val/test splits are created consistently."""
         seed = 123
 
-        data_module = RotatedFashionMNIST(
-            data_dir=str(tmp_path),
-            batch_size=32,
-            seed=seed
-        )
+        data_module = RotatedFashionMNIST(data_dir=str(tmp_path), batch_size=32, seed=seed)
         data_module.prepare_data()
-        data_module.setup(stage='fit')
+        data_module.setup(stage="fit")
 
         # Verify split sizes are correct
         assert len(data_module.train_dataset) == 50000
@@ -192,20 +174,20 @@ class TestMyDataset:
     def test_len_method_exists(self, data_path):
         """Test that __len__ method exists."""
         dataset = MyDataset(data_path=data_path)
-        assert hasattr(dataset, '__len__')
-        assert callable(getattr(dataset, '__len__'))
+        assert hasattr(dataset, "__len__")
+        assert callable(getattr(dataset, "__len__"))
 
     def test_getitem_method_exists(self, data_path):
         """Test that __getitem__ method exists."""
         dataset = MyDataset(data_path=data_path)
-        assert hasattr(dataset, '__getitem__')
-        assert callable(getattr(dataset, '__getitem__'))
+        assert hasattr(dataset, "__getitem__")
+        assert callable(getattr(dataset, "__getitem__"))
 
     def test_preprocess_method_exists(self, data_path):
         """Test that preprocess method exists."""
         dataset = MyDataset(data_path=data_path)
-        assert hasattr(dataset, 'preprocess')
-        assert callable(getattr(dataset, 'preprocess'))
+        assert hasattr(dataset, "preprocess")
+        assert callable(getattr(dataset, "preprocess"))
 
 
 if __name__ == "__main__":
