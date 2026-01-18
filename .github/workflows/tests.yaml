@@ -34,12 +34,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-
           uv venv
-
-          uv pip install numpy cython setuptools wheel
           
+          uv pip install numpy cython setuptools wheel meson-python ninja         
+
           uv pip install --no-build-isolation -e .
+          
           uv pip install pytest coverage
 
       - name: Run tests & coverage
