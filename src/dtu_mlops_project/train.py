@@ -13,6 +13,8 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 from dotenv import load_dotenv
 
+from lightning.pytorch.profilers import PyTorchProfiler
+
 import rootutils
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
@@ -35,6 +37,18 @@ wandb_entity = os.getenv("WANDB_ENTITY")
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
 def train(cfg: DictConfig) -> Dict[str, Any] | None:
+
+    # Setup profiler
+    profiler = PyTorchProfiler(
+        activities=[
+            torch.profiler.ProfilerActivity.CPU,
+            torch.profiler.ProfilerActivity.CUDA,
+        ],
+        on_trace_ready=torch.profiler.tensorboard_trace_handler(f"{cfg.paths.root_dir}/profiler"),
+        record_shapes=True,
+        profile_memory=True,
+        with_stack=True,
+    )
 
     # Seed
     if cfg.get("seed"):
@@ -66,6 +80,7 @@ def train(cfg: DictConfig) -> Dict[str, Any] | None:
         cfg.trainer,
         callbacks=callbacks,
         logger=loggers,
+        profiler=profiler
     )
 
     # Training
