@@ -23,9 +23,8 @@ jobs:
 
       - name: Run tests inside container
         run: |
-          # Mount workspace and run tests via uv inside container so the container env is authoritative
           docker run --rm -v "${{ github.workspace }}:/workspace" -w /workspace test:latest \
-            uv run coverage run -m pytest tests/ && uv run coverage report -m
+            uv run -- coverage run -m pytest tests/ && uv run -- coverage report -m
 
   # Native checks (no Docker build). Use this for lint, quick unit tests, platform-specific smoke tests.
   native-checks:
