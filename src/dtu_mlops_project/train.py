@@ -8,7 +8,6 @@ import torch
 import matplotlib.pyplot as plt
 
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
-from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 from dotenv import load_dotenv
@@ -17,9 +16,6 @@ import rootutils
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 load_dotenv()
-
-from src.dtu_mlops_project.model import C8SteerableCNN, CNN
-from src.dtu_mlops_project.data import RotatedFashionMNIST
 
 plt.style.use("ggplot")
 
@@ -37,11 +33,11 @@ wandb_entity = os.getenv("WANDB_ENTITY")
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
-def train(cfg: DictConfig) -> None:
+def train(cfg: DictConfig) -> Dict[str, Any] | None:
 
     # Seed
     if cfg.get("seed"):
-        L.seed_everything(cfg.seed)
+        L.seed_everything(seed=cfg.seed)
 
     # Instantiate datamodule
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
