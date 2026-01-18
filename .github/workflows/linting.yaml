@@ -10,7 +10,7 @@ on:
 
 jobs:
   format:
-    name: Check code formatting
+    name: linting
     runs-on: ubuntu-latest
 
 steps:
