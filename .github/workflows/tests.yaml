@@ -28,7 +28,7 @@ jobs:
             -w /workspace \
             --entrypoint "" \
             test:latest \
-            sh -lc "uv run -- coverage run -m pytest tests/ && uv run -- coverage report -m"
+            sh -lc "uv run -- coverage run --source=src -m pytest tests/ && uv run -- coverage report -m"
 
 
   # Native checks (no Docker build). Use this for lint, quick unit tests, platform-specific smoke tests.
