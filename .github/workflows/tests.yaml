@@ -20,6 +20,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Build test image
+        run: docker build -f dockerfiles/train.dockerfile -t test:latest .
+
       # 1. Setup Fortran
       - name: Setup Fortran
         uses: fortran-lang/setup-fortran@v1
