@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY uv.lock uv.lock
 COPY pyproject.toml pyproject.toml
+COPY README.md README.md
 
 RUN uv sync --frozen --no-install-project
 
