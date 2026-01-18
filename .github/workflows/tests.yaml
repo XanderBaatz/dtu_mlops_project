@@ -25,6 +25,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+      
+      - name: Install Fortran Compiler (needed for py3nj / escnn)
+        if: runner.os == 'macOS'
+        run: brew install gcc || true
 
       - name: Install dependencies
         run: |
