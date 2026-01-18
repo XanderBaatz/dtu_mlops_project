@@ -9,7 +9,7 @@ description = "DTU machine learning operations project"
 authors = [
   { name = "group80", email = "your@email.com" },
 ]
-license = { file = "MIT" }
+license = { file = "LICENSE" }
 keywords = ["machine learning", "MLOps"]
 classifiers = [
   "Development Status :: 3 - Alpha",
