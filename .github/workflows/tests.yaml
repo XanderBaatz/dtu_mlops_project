@@ -9,7 +9,7 @@ on:
 jobs:
   # Full-parity tests inside Docker (only run on Ubuntu where Docker is available)
   docker-tests:
-    name: Unit tests
+    name: Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

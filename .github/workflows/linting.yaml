@@ -1,4 +1,5 @@
 name: linting
+
 on:
   push:
     branches:
@@ -6,23 +7,31 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   format:
     name: Check code formatting
     runs-on: ubuntu-latest
-    steps:
+
+steps:
       - uses: actions/checkout@v4
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+
       - name: Set up Python
         run: uv python install 3.12
-      - name: Create venv and install dependencies
+
+      - name: Install dependencies
         run: |
-          uv venv
           uv pip install ruff
+          # Hvis du har brug for dine projekt-dependencies for at linteren virker:
+          # uv pip install -e . 
+
       - name: Run ruff check
         run: uv run ruff check .
+
       - name: Run ruff format
         run: uv run ruff format --check .
