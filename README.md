@@ -70,3 +70,7 @@ Quickly train a model:
 ```sh
 uv run ./src/dtu_mlops_project/train.py --output "model.pth"
 ```
+
+## Credits
+- [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template)
+- [Machine Learning Operations](https://github.com/SkafteNicki/dtu_mlops)

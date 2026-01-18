@@ -76,7 +76,7 @@ will check the repositories and the code to verify your answers.
 * [ ] Use logging to log important events in your code (M14)
 * [ ] Use Weights & Biases to log training progress and other important metrics/artifacts in your code (M14)
 * [ ] Consider running a hyperparameter optimization sweep (M14)
-* [ ] Use PyTorch-lightning (if applicable) to reduce the amount of boilerplate in your code (M15)
+* [x] Use PyTorch-lightning (if applicable) to reduce the amount of boilerplate in your code (M15)
 
 ### Week 2
 

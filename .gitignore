@@ -3,6 +3,13 @@ docs/site/
 # test cache
 manual_test/
 
+# Ruff cache
+.ruff_cache
+
+# devcontainer backup
+.devcontainer_backup/
+.some_container/
+
 # other local dev info
 .vscode/
 
@@ -45,6 +52,12 @@ MANIFEST
 
 # Dataset
 data/
+
+# DVC
+.dvc
+
+# Logs
+logs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
