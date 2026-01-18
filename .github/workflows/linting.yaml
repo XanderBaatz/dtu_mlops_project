@@ -1,4 +1,4 @@
-name: Code linting
+name: linting
 
 on:
   push:
