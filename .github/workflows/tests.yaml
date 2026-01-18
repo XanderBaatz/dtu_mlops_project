@@ -33,7 +33,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install uv
-          uv pip install --system -r pyproject.toml
+          uv pip sync
+          uv pip install --system numpy cython setuptools
           uv pip install --system pytest coverage
 
 
