@@ -20,29 +20,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
-      
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
       - name: Install Fortran Compiler (needed for py3nj / escnn)
         if: runner.os == 'macOS'
         run: brew install gcc || true
 
       - name: Install dependencies
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          source $HOME/.cargo/env
-          
-          uv pip install --system numpy cython setuptools wheel
-          
-          uv pip install --system --no-build-isolation -e .
-          
-          uv pip install --system pytest coverage
 
+        run: |
+          uv pip install numpy cython setuptools wheel
+          uv pip install --no-build-isolation -e .
+          uv pip install pytest coverage
 
       - name: Run tests & coverage
         run: |
-          coverage run -m pytest tests/
-          coverage report -m
+          uv run coverage run -m pytest tests/
+          uv run coverage report -m
