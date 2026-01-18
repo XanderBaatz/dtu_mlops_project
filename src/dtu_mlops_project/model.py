@@ -124,22 +124,19 @@ class CNN(L.LightningModule):
 
         # CNN model
         self.model = nn.Sequential(
-            nn.Conv2d(self.hparams.net.input_channels, 64, self.hparams.net.kernel_size), # [N, 64, 26]
+            nn.Conv2d(self.hparams.net.input_channels, 8, self.hparams.net.kernel_size, padding=self.hparams.net.padding),
             nn.ReLU(),
-            nn.Conv2d(64, 32, self.hparams.net.kernel_size), # [N, 32, 24]
+            nn.MaxPool2d(2),
+
+            nn.Conv2d(8, 16, self.hparams.net.kernel_size, padding=self.hparams.net.padding),
             nn.ReLU(),
-            nn.Conv2d(32, 16, self.hparams.net.kernel_size), # [N, 16, 22]
-            nn.ReLU(),
-            nn.Conv2d(16, 8, self.hparams.net.kernel_size),  # [N, 8, 20]
-            nn.ReLU(),
+            nn.MaxPool2d(2),
         )
 
         # Neural network classifier
         self.classifier = nn.Sequential(
-            nn.Flatten(),         # [N, 8*20*20]
-            nn.Linear(8*20*20, 128),
-            nn.Dropout(),
-            nn.Linear(128, self.hparams.net.num_classes)
+            nn.Flatten(),
+            nn.Linear(16 * 7 * 7, self.hparams.net.num_classes)
         )
 
         # Loss function
