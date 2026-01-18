@@ -70,7 +70,10 @@ Quickly train a model:
 ```sh
 uv run ./src/dtu_mlops_project/train.py --output "model.pth"
 ```
-
+With hyperparameters and epochs:
+```sh
+uv run python src/dtu_mlops_project/train.py model=c8 trainer.max_epochs=1
+```
 ## Credits
 - [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template)
 - [Machine Learning Operations](https://github.com/SkafteNicki/dtu_mlops)
