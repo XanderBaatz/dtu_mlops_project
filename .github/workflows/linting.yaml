@@ -29,7 +29,7 @@ jobs:
               uv pip install ruff
 
           - name: Run ruff check
-            run: uv run ruff check .
+            run: uv venv && uv pip list && .venv/bin/ruff check .
 
           - name: Run ruff format
-            run: uv run ruff format --check .
+            run: .venv/bin/ruff format --check .
