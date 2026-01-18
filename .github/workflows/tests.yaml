@@ -39,11 +39,7 @@ jobs:
         run: |
           uv venv
           
-          uv pip install "lie-learn==0.0.1.post1"
-          
-          uv pip install numpy cython setuptools wheel meson-python ninja
-          
-          uv pip install --no-build-isolation -e .
+          uv sync
           
           uv pip install pytest coverage
 
