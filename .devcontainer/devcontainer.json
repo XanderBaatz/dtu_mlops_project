@@ -1,18 +1,24 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/python
+// For format details, see https://aka.ms/devcontainer.json
 {
     "name": "dtu_mlops_project",
-    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+
+    // Official Dev Containers Python image (multi-arch)
     "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+
+    // Force amd64 on Apple Silicon (M1/M2)
+    "runArgs": ["--platform=linux/amd64"],
+
     "features": {},
 
-    // Use 'postCreateCommand' to run commands after the container is created.
+    // Run setup script after container creation
     "postCreateCommand": "bash .devcontainer/post_create.sh",
 
-    // Configure tool-specific properties.
     "customizations": {
         "vscode": {
-            "extensions": ["ms-python.python", "editorconfig.editorconfig"],
+            "extensions": [
+                "ms-python.python",
+                "editorconfig.editorconfig"
+            ],
             "settings": {
                 "python.testing.pytestArgs": ["tests"],
                 "python.testing.unittestEnabled": false,
