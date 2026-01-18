@@ -1,5 +1,4 @@
 name: Unit Tests
-
 on:
   push:
     branches:
@@ -7,7 +6,6 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   # Full-parity tests inside Docker (only run on Ubuntu where Docker is available)
   docker-tests:
@@ -16,11 +14,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Build test image
         run: |
           docker build -f dockerfiles/train.dockerfile -t test:latest .
-
       - name: Run tests inside container
         run: |
           docker run --rm \
@@ -29,8 +25,7 @@ jobs:
             --entrypoint "" \
             test:latest \
             sh -lc "uv run -- coverage run --source=src -m pytest tests/ && uv run -- coverage report -m"
-
-
+  
   # Native checks (no Docker build). Use this for lint, quick unit tests, platform-specific smoke tests.
   native-checks:
     name: Native checks (matrix)
@@ -42,30 +37,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup Fortran
         uses: fortran-lang/setup-fortran@v1
-
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}
-
-      - name: Create venv & install light deps
+      - name: Create venv & install deps
         shell: bash
         run: |
           uv venv
-          # Keep installs light on macOS if you have platform-limited packages.
-          # If your project contains linux-only binary deps (rdkit, lie-learn) these may fail on macOS.
-          # Consider platform-conditional dependencies in pyproject.toml or skipping heavy installs on macOS.
-          uv sync --no-install-project || true
-          uv pip install pytest coverage || true
-
-      - name: Run tests (native, may fail if binary deps missing on this OS)
+          uv sync --no-install-project || uv pip install pytest coverage
+      - name: Run tests
         shell: bash
         run: |
-          set -o pipefail
-          uv run coverage run -m pytest tests/ || echo "Some native tests failed — use docker-tests for authoritative result"
+          uv run coverage run -m pytest tests/ || echo "::warning::Some native tests failed — use docker-tests for authoritative result"

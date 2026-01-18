@@ -18,11 +18,10 @@ jobs:
           enable-cache: true
       - name: Set up Python
         run: uv python install 3.12
-      - name: Install dependencies
+      - name: Create venv and install dependencies
         run: |
+          uv venv
           uv pip install ruff
-          # Hvis du har brug for dine projekt-dependencies for at linteren virker:
-          # uv pip install -e . 
       - name: Run ruff check
         run: uv run ruff check .
       - name: Run ruff format
