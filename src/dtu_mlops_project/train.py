@@ -1,4 +1,5 @@
 from typing import Any, Dict, List
+from loguru import logger
 
 import os
 
@@ -40,35 +41,42 @@ def train(cfg: DictConfig) -> Dict[str, Any] | None:
         L.seed_everything(seed=cfg.seed)
 
     # Instantiate datamodule
+    logger.info(f"Instantiating datamodule <{cfg.data._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
     # Instantiate model
+    logger.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
 
     # Callbacks
+    logger.info("Instantiating callbacks...")
     callbacks: List[Callback] = []
     for _, cb_conf in cfg.get("callbacks", {}).items():
         callbacks.append(hydra.utils.instantiate(cb_conf))
 
     # Logger
-    logger: List[Logger] = []
+    logger.info("Instantiating loggers...")
+    loggers: List[Logger] = []
     for _, lg_conf in cfg.get("logger", {}).items():
-        logger.append(hydra.utils.instantiate(lg_conf))
+        loggers.append(hydra.utils.instantiate(lg_conf))
 
     # Trainer
+    logger.info(f"Instantiating trainer <{cfg.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(
         cfg.trainer,
         callbacks=callbacks,
-        logger=logger,
+        logger=loggers,
     )
 
     # Training
     if cfg.get("train", True):
+        logger.info("Starting training...")
         trainer.fit(model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path"))
 
     # Testing
-    test_metrics: Dict[str, Any] = {}
     if cfg.get("test", True):
+        logger.info("Starting testing...")
+        test_metrics: Dict[str, Any] = {}
         #ckpt_path = None
         #for cb in callbacks:
         #    if isinstance(cb, ModelCheckpoint):
