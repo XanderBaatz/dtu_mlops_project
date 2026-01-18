@@ -22,7 +22,7 @@ jobs:
 
       # 1. Setup Fortran
       - name: Setup Fortran
-        uses: fortra/setup-fortran@v1
+        uses: fortran-lang/setup-fortran@v1
 
       # 2. Install uv
       - name: Install uv
@@ -33,18 +33,17 @@ jobs:
       - name: Set up Python
         run: uv python install ${{ matrix.python-version }}
 
-      # 3. Install dependencies (we use bash for consistency)
+      # 3. Install dependencies
       - name: Install dependencies
         shell: bash
         run: |
           uv venv
-          # Install build tools first
+          
           uv pip install numpy cython setuptools wheel meson-python ninja
           
-          # Install the project without build isolation so it uses our tools
+          
           uv pip install --no-build-isolation -e .
           
-          # Test tools
           uv pip install pytest coverage
 
       # 4. Run tests
