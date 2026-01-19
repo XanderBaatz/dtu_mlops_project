@@ -1,4 +1,4 @@
-name: Code linting
+name: linting
 
 on:
   push:
@@ -10,30 +10,26 @@ on:
 
 jobs:
   format:
-    name: Check code formatting
+    name: linting
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+          - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          - name: Install uv
+            uses: astral-sh/setup-uv@v5
+            with:
+              enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install -U pip setuptools wheel
-          pip install -r requirements.txt
-          pip install -r requirements_dev.txt
-          pip list
+          - name: Set up Python
+            run: uv python install 3.12
 
-      - name: ruff check
-        run: |
-          ruff check .
+          - name: Install dependencies
+            run: |
+              uv venv
+              uv pip install ruff
 
-      - name: ruff format
-        run: |
-          ruff format .
+          - name: Run ruff check
+            run: uv venv && uv pip list && .venv/bin/ruff check .
+
+          - name: Run ruff format
+            run: .venv/bin/ruff format --check .

@@ -83,3 +83,6 @@ omit = ["tests/*"]
 
 [project.scripts]
 train = "dtu_mlops_project.train:train"
+
+[project.optional-dependencies]
+geo = ["lie-learn==0.0.2"]

@@ -21,13 +21,8 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 load_dotenv()
 
 
-
 # Device configuration
-DEVICE = torch.device(
-    "cuda" if torch.cuda.is_available()
-    else "mps" if torch.backends.mps.is_available()
-    else "cpu"
-)
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 
 # WandB configuration
 api_key = os.getenv("WANDB_API_KEY")
@@ -37,7 +32,6 @@ wandb_entity = os.getenv("WANDB_ENTITY")
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
 def train(cfg: DictConfig) -> Dict[str, Any] | None:
-
     # Setup profiler
     profiler = PyTorchProfiler(
         activities=[
@@ -76,12 +70,7 @@ def train(cfg: DictConfig) -> Dict[str, Any] | None:
 
     # Trainer
     logger.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(
-        cfg.trainer,
-        callbacks=callbacks,
-        logger=loggers,
-        profiler=profiler
-    )
+    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=loggers, profiler=profiler)
 
     # Training
     if cfg.get("train", True):
@@ -92,17 +81,18 @@ def train(cfg: DictConfig) -> Dict[str, Any] | None:
     if cfg.get("test", True):
         logger.info("Starting testing...")
         test_metrics: Dict[str, Any] = {}
-        #ckpt_path = None
-        #for cb in callbacks:
+        # ckpt_path = None
+        # for cb in callbacks:
         #    if isinstance(cb, ModelCheckpoint):
         #        ckpt_path = cb.best_model_path or None
-        #trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
+        # trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         trainer.test(model=model, datamodule=datamodule)
         test_metrics = trainer.callback_metrics
 
         return test_metrics
 
     return None
+
 
 if __name__ == "__main__":
     train()
