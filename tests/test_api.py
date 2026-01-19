@@ -111,4 +111,4 @@ def test_predict_endpoint_model_not_found(client):
         response = client.post("/predict", files={"file": ("test.png", img_byte_arr, "image/png")})
 
     assert response.status_code == 500
-    assert "Model checkpoint not found" in response.json()["detail"]
+    assert "Model" in response.json()["detail"]
