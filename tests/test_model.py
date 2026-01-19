@@ -1,7 +1,6 @@
 import pytest
 import torch
-import lightning as L
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from omegaconf import DictConfig
 
 from dtu_mlops_project.model import CNN, NN, C8SteerableCNN
@@ -10,15 +9,10 @@ from dtu_mlops_project.model import CNN, NN, C8SteerableCNN
 def create_cnn_model():
     """Helper function to create a CNN model with proper configuration."""
     # Create configuration objects that match the YAML config
-    net_config = DictConfig({
-        'input_channels': 1,
-        'kernel_size': 3,
-        'padding': 1,
-        'num_classes': 10
-    })
-    
+    net_config = DictConfig({"input_channels": 1, "kernel_size": 3, "padding": 1, "num_classes": 10})
+
     optimizer_fn = torch.optim.Adam
-    
+
     model = CNN(net=net_config, optimizer=optimizer_fn)
     return model
 
@@ -29,17 +23,11 @@ class TestNN:
     @pytest.fixture
     def nn_model(self):
         """Create an NN model instance."""
-        return NN(
-            input_size=28*28,
-            hidden_size1=128,
-            hidden_size2=64,
-            output_size=10,
-            lr=1e-2
-        )
+        return NN(input_size=28 * 28, hidden_size1=128, hidden_size2=64, output_size=10, lr=1e-2)
 
     def test_initialization(self, nn_model):
         """Test that NN initializes correctly."""
-        assert nn_model.hparams.input_size == 28*28
+        assert nn_model.hparams.input_size == 28 * 28
         assert nn_model.hparams.hidden_size1 == 128
         assert nn_model.hparams.hidden_size2 == 64
         assert nn_model.hparams.output_size == 10
@@ -85,13 +73,7 @@ class TestNN:
 
     def test_different_hyperparameters(self):
         """Test NN with different hyperparameters."""
-        model = NN(
-            input_size=784,
-            hidden_size1=256,
-            hidden_size2=128,
-            output_size=10,
-            lr=5e-3
-        )
+        model = NN(input_size=784, hidden_size1=256, hidden_size2=128, output_size=10, lr=5e-3)
         assert model.hparams.hidden_size1 == 256
         x = torch.randn(2, 1, 28, 28)
         output = model(x)
@@ -159,7 +141,7 @@ class TestCNN:
         """Test optimizer configuration."""
         cnn_model.trainer = Mock()
         cnn_model.trainer.model = cnn_model
-        
+
         optimizer_config = cnn_model.configure_optimizers()
         assert "optimizer" in optimizer_config
 
@@ -187,13 +169,8 @@ class TestC8SteerableCNN:
     def steerable_cnn_model(self):
         """Create a C8SteerableCNN model instance with proper configuration."""
         try:
-            net_config = DictConfig({
-                'input_channels': 1,
-                'kernel_size': 5,
-                'padding': 2,
-                'num_classes': 10
-            })
-            
+            net_config = DictConfig({"input_channels": 1, "kernel_size": 5, "padding": 2, "num_classes": 10})
+
             optimizer_fn = torch.optim.Adam
             model = C8SteerableCNN(net=net_config, optimizer=optimizer_fn)
             return model
@@ -231,12 +208,12 @@ class TestModelTraining:
     def test_nn_training_loop(self):
         """Test a simple training loop with NN model."""
         model = NN(lr=1e-2)
-        
+
         # Create dummy data
         batch_x = torch.randn(8, 1, 28, 28)
         batch_y = torch.randint(0, 10, (8,))
         batch = (batch_x, batch_y)
-        
+
         # Training step
         initial_loss = model.training_step(batch, batch_idx=0)
         assert initial_loss > 0
@@ -247,12 +224,12 @@ class TestModelTraining:
     def test_cnn_training_loop(self):
         """Test a simple training loop with CNN model."""
         model = create_cnn_model()
-        
+
         # Create dummy data
         batch_x = torch.randn(8, 1, 28, 28)
         batch_y = torch.randint(0, 10, (8,))
         batch = (batch_x, batch_y)
-        
+
         # Training step
         initial_loss = model.training_step(batch, batch_idx=0)
         assert initial_loss > 0
@@ -261,43 +238,43 @@ class TestModelTraining:
         """Test that model parameters are updated during training."""
         model = NN(lr=1e-2)
         optimizer = model.configure_optimizers()
-        
+
         # Store initial parameters
         initial_params = [p.clone() for p in model.parameters()]
-        
+
         # Create dummy data and training step
         batch_x = torch.randn(8, 1, 28, 28)
         batch_y = torch.randint(0, 10, (8,))
         batch = (batch_x, batch_y)
-        
+
         loss = model.training_step(batch, batch_idx=0)
         loss.backward()
         optimizer.step()
-        
+
         # Check that parameters have changed
         params_changed = False
         for new_p, old_p in zip(model.parameters(), initial_params):
             if not torch.equal(new_p.data, old_p):
                 params_changed = True
                 break
-        
+
         assert params_changed
 
     def test_model_reproducibility(self):
         """Test that using the same seed produces reproducible results."""
         seed = 42
-        
+
         # Create first model
         torch.manual_seed(seed)
         model_1 = NN(lr=1e-2)
         batch = (torch.randn(4, 1, 28, 28), torch.randint(0, 10, (4,)))
         loss_1 = model_1.training_step(batch, batch_idx=0)
-        
+
         # Create second model
         torch.manual_seed(seed)
         model_2 = NN(lr=1e-2)
         loss_2 = model_2.training_step(batch, batch_idx=0)
-        
+
         # Losses should be very close (may not be exactly equal due to floating point)
         assert torch.allclose(loss_1, loss_2, atol=1e-5)
 
@@ -305,14 +282,14 @@ class TestModelTraining:
         """Test that model produces different outputs for different batches."""
         model = NN(lr=1e-1)
         model.eval()
-        
+
         batch_1 = torch.randn(4, 1, 28, 28)
         batch_2 = torch.randn(4, 1, 28, 28)
-        
+
         with torch.no_grad():
             output_1 = model(batch_1)
             output_2 = model(batch_2)
-        
+
         # Outputs should be different for different inputs
         assert not torch.allclose(output_1, output_2)
 

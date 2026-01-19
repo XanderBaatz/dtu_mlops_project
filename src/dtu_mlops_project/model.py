@@ -1,14 +1,12 @@
-from torch_geometric.nn import GCNConv
 from torch import nn, optim
 from escnn import gspaces
 from escnn import nn as enn
 from typing import Any, Dict, Tuple
 import lightning as L
-from lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
 import torch
-import wandb
+
 
 # Base model class example (Pytorch Lightning)
 # Inspired by https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html
@@ -20,7 +18,7 @@ class Model(L.LightningModule):
 
         self.model = ...  # Define your model architecture here
 
-        self.criterion = ... # Define your loss function here
+        self.criterion = ...  # Define your loss function here
 
     def forward(self, x):
         raise NotImplementedError("Forward method not implemented.")
@@ -42,7 +40,7 @@ class Model(L.LightningModule):
 class NN(L.LightningModule):
     def __init__(
         self,
-        input_size: int = 28*28,
+        input_size: int = 28 * 28,
         hidden_size1: int = 128,
         hidden_size2: int = 64,
         output_size: int = 10,
@@ -62,7 +60,7 @@ class NN(L.LightningModule):
             nn.ReLU(),
             nn.Linear(hidden_size1, hidden_size2),
             nn.ReLU(),
-            nn.Linear(hidden_size2, output_size)
+            nn.Linear(hidden_size2, output_size),
         )
 
         # Loss function
@@ -124,20 +122,18 @@ class CNN(L.LightningModule):
 
         # CNN model
         self.model = nn.Sequential(
-            nn.Conv2d(self.hparams.net.input_channels, 8, self.hparams.net.kernel_size, padding=self.hparams.net.padding),
+            nn.Conv2d(
+                self.hparams.net.input_channels, 8, self.hparams.net.kernel_size, padding=self.hparams.net.padding
+            ),
             nn.ReLU(),
             nn.MaxPool2d(2),
-
             nn.Conv2d(8, 16, self.hparams.net.kernel_size, padding=self.hparams.net.padding),
             nn.ReLU(),
             nn.MaxPool2d(2),
         )
 
         # Neural network classifier
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(16 * 7 * 7, self.hparams.net.num_classes)
-        )
+        self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(16 * 7 * 7, self.hparams.net.num_classes))
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
@@ -172,7 +168,7 @@ class CNN(L.LightningModule):
         data, target = batch
         y_pred = self(data)
         loss = self.criterion(y_pred, target)
-        acc = (y_pred.argmax(1) == target).float().mean()
+        (y_pred.argmax(1) == target).float().mean()
 
         # update and log metrics
         self.train_loss(loss)
@@ -190,7 +186,7 @@ class CNN(L.LightningModule):
         data, target = batch
         y_pred = self(data)
         loss = self.criterion(y_pred, target)
-        acc = (y_pred.argmax(1) == target).float().mean()
+        (y_pred.argmax(1) == target).float().mean()
 
         # update and log metrics
         self.test_loss(loss)
@@ -208,7 +204,7 @@ class CNN(L.LightningModule):
         data, target = batch
         y_pred = self(data)
         loss = self.criterion(y_pred, target)
-        acc = (y_pred.argmax(1) == target).float().mean()
+        (y_pred.argmax(1) == target).float().mean()
 
         # update and log metrics
         self.val_loss(loss)
@@ -249,16 +245,19 @@ class C8SteerableCNN(L.LightningModule):
         out_type = enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr])
 
         self.block = enn.SequentialModule(
-            enn.R2Conv(self.input_type, out_type, kernel_size=self.hparams.net.kernel_size, padding=self.hparams.net.padding, bias=False),
+            enn.R2Conv(
+                self.input_type,
+                out_type,
+                kernel_size=self.hparams.net.kernel_size,
+                padding=self.hparams.net.padding,
+                bias=False,
+            ),
             enn.ReLU(out_type, inplace=True),
             enn.PointwiseMaxPool(out_type, self.hparams.net.pooling_size),
             enn.GroupPooling(out_type),
         )
 
-        self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(4 * 14 * 14, self.hparams.net.num_classes)
-        )
+        self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(4 * 14 * 14, self.hparams.net.num_classes))
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
@@ -295,7 +294,7 @@ class C8SteerableCNN(L.LightningModule):
         data, target = batch
         y_pred = self(data)
         loss = self.criterion(y_pred, target)
-        acc = (y_pred.argmax(1) == target).float().mean()
+        (y_pred.argmax(1) == target).float().mean()
 
         # update and log metrics
         self.train_loss(loss)
@@ -313,7 +312,7 @@ class C8SteerableCNN(L.LightningModule):
         data, target = batch
         y_pred = self(data)
         loss = self.criterion(y_pred, target)
-        acc = (y_pred.argmax(1) == target).float().mean()
+        (y_pred.argmax(1) == target).float().mean()
 
         # update and log metrics
         self.test_loss(loss)
@@ -331,7 +330,7 @@ class C8SteerableCNN(L.LightningModule):
         data, target = batch
         y_pred = self(data)
         loss = self.criterion(y_pred, target)
-        acc = (y_pred.argmax(1) == target).float().mean()
+        (y_pred.argmax(1) == target).float().mean()
 
         # update and log metrics
         self.val_loss(loss)
