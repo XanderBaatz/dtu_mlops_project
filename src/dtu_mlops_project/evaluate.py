@@ -12,16 +12,11 @@ plt.style.use("ggplot")
 
 app = typer.Typer()
 
-DEVICE = torch.device(
-    "cuda" if torch.cuda.is_available()
-    else "mps" if torch.backends.mps.is_available()
-    else "cpu"
-)
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+
 
 @app.command()
-def evaluate(
-    model_checkpoint: Annotated[str, typer.Option("--model", "-m")] = "models/model.pth"
-) -> None:
+def evaluate(model_checkpoint: Annotated[str, typer.Option("--model", "-m")] = "models/model.pth") -> None:
     """Evaluate a trained model."""
     print("Evaluating like my life depends on it")
     print(model_checkpoint)
@@ -29,7 +24,7 @@ def evaluate(
     # DataModule
     dm = RotatedFashionMNIST()
     dm.prepare_data()
-    dm.setup(stage='test')
+    dm.setup(stage="test")
 
     # Model
     model = CNN(num_classes=dm.num_classes).to(DEVICE)
@@ -59,6 +54,7 @@ def evaluate(
         axs[1].plot(metrics_df["test_acc_step"].dropna())
         axs[1].set_title("Test accuracy")
         fig.savefig("reports/figures/testing_statistics.pdf")
+
 
 if __name__ == "__main__":
     app()
