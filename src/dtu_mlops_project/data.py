@@ -151,7 +151,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
         )
 
 
-def dataset_statistics(data_dir:str = "data") -> None:
+def dataset_statistics(data_dir: str = "data") -> None:
     dataset = RotatedFashionMNIST(data_dir=data_dir)
     dataset.prepare_data()
     dataset.setup(stage="fit")
