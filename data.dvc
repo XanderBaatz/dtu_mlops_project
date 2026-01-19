@@ -1,6 +1,137 @@
 outs:
-- md5: 6df042f01f52580c084971d1f09d4b5d.dir
-  size: 3814048424
-  nfiles: 16
-  hash: md5
+- hash: md5
   path: data
+  files:
+  - relpath: Cora/processed/data.pt
+    md5: c8338229d988f68293aaa542027bd301
+    size: 15723336
+    cloud:
+      remote_storage:
+        etag: 08f5ddd0b98c9692031001
+        version_id: '1768773953793781'
+  - relpath: Cora/processed/pre_filter.pt
+    md5: 4bf6b4e4c38160b8add42f11e4d1ea1b
+    size: 864
+    cloud:
+      remote_storage:
+        etag: 08bf8584b88c9692031001
+        version_id: '1768773950440127'
+  - relpath: Cora/processed/pre_transform.pt
+    md5: 4bf6b4e4c38160b8add42f11e4d1ea1b
+    size: 864
+    cloud:
+      remote_storage:
+        etag: 0897f484b88c9692031001
+        version_id: '1768773950454295'
+  - relpath: Cora/raw/ind.cora.allx
+    md5: c9083193a57057dd1238321e140194d7
+    size: 257305
+    cloud:
+      remote_storage:
+        etag: 08f88185b88c9692031001
+        version_id: '1768773950456056'
+  - relpath: Cora/raw/ind.cora.ally
+    md5: 125d70817fe1fdbfdcad991995e81579
+    size: 47959
+    cloud:
+      remote_storage:
+        etag: 08eea1dfb78c9692031001
+        version_id: '1768773949837550'
+  - relpath: Cora/raw/ind.cora.graph
+    md5: b37c419cec179f45834467630c278e4c
+    size: 59847
+    cloud:
+      remote_storage:
+        etag: 08e6f7feb78c9692031001
+        version_id: '1768773950356454'
+  - relpath: Cora/raw/ind.cora.test.index
+    md5: 9b822cae1d01f41e8bf8782e20367c0e
+    size: 5000
+    cloud:
+      remote_storage:
+        etag: 08e2bcfcb78c9692031001
+        version_id: '1768773950316130'
+  - relpath: Cora/raw/ind.cora.tx
+    md5: b29c36916768e1d2f55391c1aa9317ac
+    size: 148025
+    cloud:
+      remote_storage:
+        etag: 08c1a588b88c9692031001
+        version_id: '1768773950509761'
+  - relpath: Cora/raw/ind.cora.ty
+    md5: 48bf43f54fa5b86089a4bd0299795f10
+    size: 28135
+    cloud:
+      remote_storage:
+        etag: 08c7b5fdb78c9692031001
+        version_id: '1768773950331591'
+  - relpath: Cora/raw/ind.cora.x
+    md5: 190831eee19d8f330d89d94b40a65c5a
+    size: 22119
+    cloud:
+      remote_storage:
+        etag: 088bebf3b78c9692031001
+        version_id: '1768773950174603'
+  - relpath: Cora/raw/ind.cora.y
+    md5: 78344284e3ff7fd24eb9c307d51351eb
+    size: 4054
+    cloud:
+      remote_storage:
+        etag: 0896b0fcb78c9692031001
+        version_id: '1768773950314518'
+  - relpath: FashionMNIST/raw/t10k-images-idx3-ubyte
+    md5: 8181f5470baa50b63fa0f6fddb340f0a
+    size: 7840016
+    cloud:
+      remote_storage:
+        etag: 08cd869cb98c9692031001
+        version_id: '1768773952930637'
+  - relpath: FashionMNIST/raw/t10k-images-idx3-ubyte.gz
+    md5: bef4ecab320f06d8554ea6380940ec79
+    size: 4422102
+    cloud:
+      remote_storage:
+        etag: 08edebebb88c9692031001
+        version_id: '1768773952140781'
+  - relpath: FashionMNIST/raw/t10k-labels-idx1-ubyte
+    md5: 15d484375f8d13e6eb1aabb0c3f46965
+    size: 10008
+    cloud:
+      remote_storage:
+        etag: 08d6b687b88c9692031001
+        version_id: '1768773950495574'
+  - relpath: FashionMNIST/raw/t10k-labels-idx1-ubyte.gz
+    md5: bb300cfdad3c16e7a12a480ee83cd310
+    size: 5148
+    cloud:
+      remote_storage:
+        etag: 08d78484b88c9692031001
+        version_id: '1768773950440023'
+  - relpath: FashionMNIST/raw/train-images-idx3-ubyte
+    md5: f4a8712d7a061bf5bd6d2ca38dc4d50a
+    size: 47040016
+    cloud:
+      remote_storage:
+        etag: 08c2aea3ba8c9692031001
+        version_id: '1768773955147586'
+  - relpath: FashionMNIST/raw/train-images-idx3-ubyte.gz
+    md5: 8d4fb7e6c68d591d4c3dfef9ec88bf0d
+    size: 26421880
+    cloud:
+      remote_storage:
+        etag: 08b7d7f8b98c9692031001
+        version_id: '1768773954448311'
+  - relpath: FashionMNIST/raw/train-labels-idx1-ubyte
+    md5: 9018921c3c673c538a1fc5bad174d6f9
+    size: 60008
+    cloud:
+      remote_storage:
+        etag: 08bdb186b88c9692031001
+        version_id: '1768773950478525'
+  - relpath: FashionMNIST/raw/train-labels-idx1-ubyte.gz
+    md5: 25c81989df183df01b3e8a0aad5dffbe
+    size: 29515
+    cloud:
+      remote_storage:
+        etag: 08f2c987b88c9692031001
+        version_id: '1768773950498034'
