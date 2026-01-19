@@ -1,23 +1,28 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0  # Opdateret fra v3.2.0 for bedre kompatibilitet
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
-#    -   id: check-json
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
 
-#repos:
-#- repo: https://github.com/astral-sh/ruff-pre-commit
-#  rev: v0.4.7
-#  hooks:
-#    # try to fix what is possible
-#    - id: ruff
-#        args: ["--fix"]
-#    # perform formatting updates
-#    - id: ruff-format
-#    # validate if all is fine with preview mode
-#    - id: ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.13
+    hooks:
+
+      - id: ruff
+        args: ["--fix"]
+
+      - id: ruff-format
+
+      - id: ruff
+
+  - repo: https://github.com/iterative/dvc
+    rev: 3.66.1
+    hooks:
+      - id: dvc-pre-commit
+        additional_dependencies: ['.']

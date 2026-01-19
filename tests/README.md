@@ -9,7 +9,7 @@ uv run pytest tests/test_data.py -v --tb=short 2>&1 | tail -40
 uv run coverage run -m pytest tests/
 ```
 
-or 
+or
 
 ```sh
 uv run coverage report -m
