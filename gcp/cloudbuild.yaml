@@ -1,0 +1,23 @@
+# run command:
+# gcloud builds submit .   --config cloudbuild.yaml   --substitutions=_IMAGE=api,_TAG=$(git rev-parse --short HEAD)
+
+
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build container image'
+  args: [
+    'build',
+    '.',
+    '-t',
+    'europe-west1-docker.pkg.dev/project-1ae70a6c-230c-4a5d-a4f/pytorch-container/$_IMAGE:$_TAG',
+    '-f',
+    'dockerfiles/cloud.dockerfile'
+  ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push container image'
+  args: [
+    'push',
+    'europe-west1-docker.pkg.dev/project-1ae70a6c-230c-4a5d-a4f/pytorch-container/$_IMAGE:$_TAG'
+  ]
+options:
+  logging: CLOUD_LOGGING_ONLY
