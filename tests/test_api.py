@@ -34,6 +34,7 @@ def test_health_endpoint(client):
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
+
 @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_with_valid_image(client):
     """Test predict endpoint with a valid image."""
@@ -57,6 +58,7 @@ def test_predict_endpoint_with_valid_image(client):
     assert "class_id" in data
     assert "class_name" in data
     assert "confidence" in data
+
 
 @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_with_real_model_and_sample_image(client):
@@ -97,6 +99,7 @@ def test_predict_endpoint_with_invalid_image(client):
 
     assert response.status_code == 400
     assert "Invalid image file" in response.json()["detail"]
+
 
 @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_model_not_found(client):
