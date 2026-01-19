@@ -48,9 +48,7 @@ def test_predict_endpoint_with_valid_image(client):
 
         import torch
 
-        mock_model_instance.return_value = torch.tensor(
-            [[0.1, 0.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]
-        )
+        mock_model_instance.return_value = torch.tensor([[0.1, 0.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]])
 
         response = client.post("/predict", files={"file": ("test.png", img_byte_arr, "image/png")})
 

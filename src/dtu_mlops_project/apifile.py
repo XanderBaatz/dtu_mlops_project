@@ -107,5 +107,3 @@ async def predict(file: UploadFile = File(...)) -> JSONResponse:
         "confidence": confidence,
     }
     return JSONResponse(content=payload)
-
-
