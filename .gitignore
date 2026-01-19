@@ -54,7 +54,8 @@ MANIFEST
 data/
 
 # DVC
-.dvc
+.dvc/cache
+.dvc/tmp
 
 # Logs
 logs/
