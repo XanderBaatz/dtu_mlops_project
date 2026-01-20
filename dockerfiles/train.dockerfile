@@ -1,52 +1,30 @@
-#Build
-#docker buildx build --platform linux/amd64 -t dtu_mlops_project:train -f dockerfiles/train.dockerfile .
-
-#Run
-#docker run --rm dtu_mlops_project:train
-
-# Use Python 3.12 Bookworm base image (amd64)
-FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
-
-# Set working directory
-WORKDIR /app
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # System dependencies for native builds
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gfortran \
     build-essential \
-    pkg-config \
-    apt-transport-https \
-    ca-certificates \
-    gnupg \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install uv (Astral SH)
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Make uv globally available
-ENV PATH="/root/.local/bin:${PATH}"
-
-# Verify installations
-RUN uv --version \
-    && python --version \
-    && gfortran --version
-
-# Copy project metadata first for caching
-COPY pyproject.toml uv.lock README.md LICENSE ./
+# Copy project metadata
+COPY pyproject.toml pyproject.toml
+COPY uv.lock uv.lock
+COPY src/ src/
+COPY configs/ configs/
+COPY tests/ tests/
+COPY README.md README.md
+COPY LICENSE LICENSE
 COPY .project-root .project-root
+COPY .python-version .python-version
 
-# Resolve and download dependency wheels / sdist (no project install yet)
-RUN uv sync --frozen --no-install-project
+# Set working directory
+WORKDIR /
 
-# Copy source code
-COPY src src/
+# Install python and dependencies via uv
+ENV UV_LINK_MODE=copy
+RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
-# Copy project configs
-COPY configs configs/
-
-# Install the project into the environment
-RUN uv sync --frozen
+RUN mkdir -p models reports/figures logs profiler
 
 # Set default entrypoint to training script
-ENTRYPOINT ["uv", "run", "python", "-m", "dtu_mlops_project.train"]
+ENTRYPOINT ["uv", "run", "src/dtu_mlops_project/train.py"]
