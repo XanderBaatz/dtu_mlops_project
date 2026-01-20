@@ -4,7 +4,6 @@ import torch
 from typing import Optional
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import matplotlib.pyplot as plt
 
 # https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/datasets/reddit.html#Reddit
 from torchvision.datasets import FashionMNIST
@@ -27,18 +26,6 @@ class MyDataset(Dataset):
         """Preprocess the raw data and save it to the output folder."""
 
 
-class RandomRotate:
-    def __init__(self, n: int):
-        assert n > 0, "n must be positive"
-        self.n = n
-        self.step = 360 / n
-
-    def __call__(self, img):
-        k = torch.randint(0, self.n, (1,)).item()
-        angle = k * self.step
-        return torchvision.transforms.functional.rotate(img, angle)
-
-
 # For use with rotation equivariance models
 # https://lightning.ai/docs/pytorch/latest/data/datamodule.html#what-is-a-datamodule
 class RotatedFashionMNIST(L.LightningDataModule):
@@ -57,7 +44,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
         # Define the transform to rotate images by 45 degrees
         self.transform = torchvision.transforms.Compose(
             [
-                RandomRotate(8),
+                torchvision.transforms.RandomRotation((45, 45)),
                 torchvision.transforms.ToTensor(),
             ]
         )
@@ -151,34 +138,8 @@ class RotatedFashionMNIST(L.LightningDataModule):
         )
 
 
-def dataset_statistics(data_dir: str = "data") -> None:
-    dataset = RotatedFashionMNIST(data_dir=data_dir)
-    dataset.prepare_data()
-    dataset.setup(stage="fit")
-
-    train_dataloader = dataset.train_dataloader()
-
-    # First 25 samples
-    data_iter = iter(train_dataloader)
-    images, labels = next(data_iter)
-    fig, axes = plt.subplots(5, 5, figsize=(10, 10))
-    for i in range(5):
-        for j in range(5):
-            axes[i, j].imshow(images[i * 5 + j].squeeze(), cmap="gray")
-            axes[i, j].set_title(f"Label: {labels[i * 5 + j].item()}")
-            axes[i, j].axis("off")
-    plt.savefig("reports/figures/sample_images.png")
-    plt.close()
-
-    # Label distribution
-    train_label_distribution = torch.bincount(train_dataloader.dataset.dataset.targets)
-    plt.bar(torch.arange(10), train_label_distribution)
-    plt.title("Training Set Label Distribution")
-    plt.xlabel("Label")
-    plt.ylabel("Count")
-    plt.savefig("reports/figures/train_label_distribution.png")
-    plt.close()
-
-
 if __name__ == "__main__":
-    dataset_statistics(data_dir="data")
+    # typer.run(preprocess)
+    # dataset = Planetoid(root="data", name="Cora")
+    ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
+    print(len(ds.classes))

@@ -1,52 +1,27 @@
-#Build
-#docker buildx build --platform linux/amd64 -t dtu_mlops_project:train -f dockerfiles/train.dockerfile .
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
 
-#Run
-#docker run --rm dtu_mlops_project:train
-
-# Use Python 3.12 Bookworm base image (amd64)
-FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
-
-# Set working directory
-WORKDIR /app
-
-# System dependencies for native builds
+# Install system dependencies needed for native builds
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gfortran \
-    build-essential \
-    pkg-config \
-    apt-transport-https \
-    ca-certificates \
-    gnupg \
-    curl \
+    gfortran build-essential pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv (Astral SH)
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+# Copy metadata and packaging files first (cache friendly)
+COPY pyproject.toml pyproject.toml
+COPY uv.lock uv.lock
+# Ensure files referenced in pyproject.toml are copied
+COPY README.md README.md
+COPY LICENSE LICENSE
+# If your pyproject references other files (MIT, CHANGELOG.md...), copy them too:
+# COPY MIT MIT
+# COPY CHANGELOG.md CHANGELOG.md
 
-# Make uv globally available
-ENV PATH="/root/.local/bin:${PATH}"
-
-# Verify installations
-RUN uv --version \
-    && python --version \
-    && gfortran --version
-
-# Copy project metadata first for caching
-COPY pyproject.toml uv.lock README.md LICENSE ./
-COPY .project-root .project-root
-
-# Resolve and download dependency wheels / sdist (no project install yet)
+# Resolve and download dependency wheels / sdist (no project install)
 RUN uv sync --frozen --no-install-project
 
-# Copy source code
+# Copy source
 COPY src src/
 
-# Copy project configs
-COPY configs configs/
-
-# Install the project into the environment
+# Install project into the environment
 RUN uv sync --frozen
 
-# Set default entrypoint to training script
-ENTRYPOINT ["uv", "run", "python", "-m", "dtu_mlops_project.train"]
+ENTRYPOINT ["uv", "run", "src/dtu_mlops_project/train.py"]
