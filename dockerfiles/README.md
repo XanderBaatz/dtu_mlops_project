@@ -6,7 +6,7 @@ docker build -f dockerfiles/train.dockerfile . -t train:latest
 
 Quick run:
 ```
-docker run --name train_run --rm \
+docker run --rm --name train_run \
     -v .models:/models/ \
     -v .reports/figures:/reports/figures/ \
     train:latest
