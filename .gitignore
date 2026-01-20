@@ -53,9 +53,6 @@ MANIFEST
 # Dataset
 data/
 
-#Wandb
-wandb/
-
 # DVC
 .dvc/cache
 .dvc/tmp
