@@ -1,46 +1,40 @@
-# Multi-stage build to get uv
-FROM ghcr.io/astral-sh/uv:latest AS uv
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm AS base
 
-# Base image with CUDA 12.4.1 and cuDNN (compatible with common PyTorch versions)
-# Ubuntu 22.04 base
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+# Install system dependencies needed for native builds
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gfortran build-essential pkg-config curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy uv from the official image
-COPY --from=uv /uv /uvx /bin/
-
-# Install essentials
-# - build-essential, gcc: for compiling some python extensions if needed
-# - git: often needed for dependencies
-# - ca-certificates, curl: for downloading things
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    gfortran \
-    build-essential \
-    gcc \
-    git \
-    ca-certificates \
-    curl \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copy project files
+# Copy metadata and packaging files first (cache friendly)
 COPY pyproject.toml pyproject.toml
 COPY uv.lock uv.lock
-COPY src/ src/
-COPY configs/ configs/
-COPY tests/ tests/
+# Ensure files referenced in pyproject.toml are copied
 COPY README.md README.md
 COPY LICENSE LICENSE
-COPY .python-version .python-version
 COPY .project-root .project-root
+COPY configs/ configs/
+COPY src/ src/
+# If your pyproject references other files (MIT, CHANGELOG.md...), copy them too:
+# COPY MIT MIT
+# COPY CHANGELOG.md CHANGELOG.md
+
+# INEFFICIENT VERSION
+# Resolve and download dependency wheels / sdist (no project install)
+RUN uv sync --frozen --no-install-project
 
 WORKDIR /
 
-# Install python and dependencies via uv
-# uv should strictly respect .python-version and install the required python
-ENV UV_COMPILE_BYTECODE=1
-RUN uv sync --no-cache-dir --frozen
+## OPTIMIZED VERSION
+# Below is an optimized version that uses caching of uv downloads/wheels between builds
+# to speed up the build process while still keeping the final image small.
+# This makes sure we don't always rebuild everything from scratch.
+#ENV UV_LINK_MODE=copy
+#RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
-RUN mkdir -p models reports/figures
+# Create directories for saving outputs
+RUN mkdir -p models reports/figures logs/train/runs profiler
 
-# Use uv run to execute the script in the environment
-ENTRYPOINT ["uv", "run", "src/ml_ops_project/train.py"]
+# Install project into the environment
+#RUN uv sync --frozen
+
+ENTRYPOINT ["uv", "run", "src/dtu_mlops_project/train.py"]
