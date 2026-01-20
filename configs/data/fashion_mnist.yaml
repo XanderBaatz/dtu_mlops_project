@@ -1,0 +1,5 @@
+_target_: src.dtu_mlops_project.data.RotatedFashionMNIST
+
+data_dir: ${paths.data_dir}
+batch_size: 32
+num_workers: 0
