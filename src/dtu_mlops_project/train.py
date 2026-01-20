@@ -2,6 +2,8 @@ from typing import Any, Dict, List
 from loguru import logger
 
 import os
+import sys
+from pathlib import Path
 
 import hydra
 import lightning as L
@@ -20,6 +22,15 @@ import rootutils
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 load_dotenv()
 
+# Resolve configs directory absolutely so Hydra works both locally and in containers
+CONFIG_PATH = str(Path(__file__).resolve().parents[2] / "configs")
+
+# Debug: print resolved config path REMOVE IN PUSH!!!
+if "--config-name" in sys.argv or "--cfg" in sys.argv:
+    logger.info(f"Resolved CONFIG_PATH: {CONFIG_PATH}")
+    logger.info(f"Config path exists: {Path(CONFIG_PATH).exists()}")
+    if Path(CONFIG_PATH).exists():
+        logger.info(f"Config contents: {list(Path(CONFIG_PATH).iterdir())[:10]}")
 
 # Device configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
@@ -30,7 +41,7 @@ wandb_project = os.getenv("WANDB_PROJECT")
 wandb_entity = os.getenv("WANDB_ENTITY")
 
 
-@hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
+@hydra.main(version_base="1.3", config_path=CONFIG_PATH, config_name="train")
 def train(cfg: DictConfig) -> Dict[str, Any] | None:
     # Setup profiler
     profiler = PyTorchProfiler(
