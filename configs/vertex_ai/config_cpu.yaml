@@ -1,0 +1,26 @@
+workerPoolSpecs:
+  - machineSpec:
+      machineType: n1-highmem-2
+    replicaCount: 1
+    containerSpec:
+      imageUri: europe-west1-docker.pkg.dev/project-1ae70a6c-230c-4a5d-a4f/pytorch-container/api:with-data-config
+      command:
+        - uv
+        - run
+        - src/dtu_mlops_project/train.py
+        - --config-name
+        - train
+      args:
+        - trainer.max_epochs=2
+        - data.batch_size=128
+        - data.data_dir=/gcs/mlops_80/data
+
+
+#Command to start training
+#gcloud ai custom-jobs create \
+#    --region=europe-west1 \
+#    --display-name=test-run \
+#    --config=configs/vertex_ai/config.yaml
+
+
+#Kan tilgås: https://console.cloud.google.com/vertex-ai/training/custom-jobs?project=project-1ae70a6c-230c-4a5d-a4f
