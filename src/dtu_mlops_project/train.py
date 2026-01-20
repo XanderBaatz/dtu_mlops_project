@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 from loguru import logger
 
 import os
+import sys
 from pathlib import Path
 
 import hydra
@@ -25,7 +26,6 @@ load_dotenv()
 CONFIG_PATH = str(Path(__file__).resolve().parents[2] / "configs")
 
 # Debug: print resolved config path REMOVE IN PUSH!!!
-import sys
 if "--config-name" in sys.argv or "--cfg" in sys.argv:
     logger.info(f"Resolved CONFIG_PATH: {CONFIG_PATH}")
     logger.info(f"Config path exists: {Path(CONFIG_PATH).exists()}")
