@@ -76,6 +76,14 @@ class RotatedFashionMNIST(L.LightningDataModule):
         """
         return 10
 
+    @property
+    def dims(self) -> tuple:
+        """Get the shape of a single sample (channels, height, width).
+
+        :return: Shape tuple for FashionMNIST images (1, 28, 28).
+        """
+        return (1, 28, 28)
+
     def prepare_data(self) -> None:
         # Download the dataset
         FashionMNIST(root=self.hparams.data_dir, train=True, download=True)

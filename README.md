@@ -86,7 +86,6 @@ The directory structure of the project looks like this:
 ├── .gitignore
 ├── .pre-commit-config.yaml   # Pre-commit hooks (linting, formatting)
 ├── AGENTS.md                 # Instructions for autonomous coding agents
-├── cloudbuild.yaml           # Cloud Build pipeline for Docker image
 ├── data.dvc                  # DVC data versioning file
 ├── LICENSE
 ├── pyproject.toml            # Python project configuration (dependencies, metadata)
@@ -148,7 +147,16 @@ uv run python src/dtu_mlops_project/train.py trainer=gpu model=cnn data.batch_si
 
 # Train with experiment config
 uv run python src/dtu_mlops_project/train.py experiment=best_model
+
+# Export trained model to ONNX format after training
+uv run python src/dtu_mlops_project/train.py export_onnx=True
+
+# Combined: Train and export to ONNX with custom hyperparameters
+uv run python src/dtu_mlops_project/train.py trainer=gpu data.batch_size=64 export_onnx=True
 ```
+
+The exported ONNX model will be saved to: `logs/train/runs/<timestamp>/model.onnx`
+ONNX models can be deployed to inference servers or used with ONNX Runtime for production inference.
 
 ### Hyperparameter Sweeps
 ```sh
@@ -159,6 +167,8 @@ uv run python src/dtu_mlops_project/train.py --multirun hparams_search=wandb_swe
 ### Cloud Training (Vertex AI)
 ```sh
 # Build and push Docker image to Artifact Registry
+
+##TODO ÆNDRER TIL config folder istedet for root cloud
 gcloud builds submit . --config cloudbuild.yaml --substitutions=_IMAGE=api,_TAG=$(git rev-parse --short HEAD)
 
 # Submit Vertex AI training job
