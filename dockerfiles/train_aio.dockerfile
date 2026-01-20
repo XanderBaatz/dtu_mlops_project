@@ -1,11 +1,4 @@
-# Multi stage uv
-FROM ghcr.io/astral-sh/uv:latest AS uv
-
-# Use Python 3.12 Bookworm base image (amd64)
-FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
-
-# Copy uv from the official image
-COPY --from=uv /uv /uvx /bin/
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # System dependencies for native builds
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,8 +21,8 @@ COPY .python-version .python-version
 WORKDIR /
 
 # Install python and dependencies via uv
-ENV UV_COMPILE_BYTECODE=1
-RUN uv sync --no-cache-dir --frozen
+ENV UV_LINK_MODE=copy
+RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
 RUN mkdir -p models reports/figures logs profiler
 
