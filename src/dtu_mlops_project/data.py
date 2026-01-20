@@ -6,7 +6,6 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
-# https://pytorch-geometric.readthedocs.io/en/latest/_modules/torch_geometric/datasets/reddit.html#Reddit
 from torchvision.datasets import FashionMNIST
 import torchvision
 
