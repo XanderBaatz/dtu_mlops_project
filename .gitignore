@@ -56,9 +56,6 @@ data/*
 # Profiler
 profiler/*
 
-#Wandb
-wandb/
-
 # DVC
 .dvc/cache
 .dvc/tmp
