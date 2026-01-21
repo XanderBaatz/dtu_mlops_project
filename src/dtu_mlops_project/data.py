@@ -226,7 +226,5 @@ def dataset_statistics(data_dir: str = "data") -> None:
 
 
 if __name__ == "__main__":
-    # typer.run(preprocess)
-    # dataset = Planetoid(root="data", name="Cora")
     ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
     print(len(ds.classes))
