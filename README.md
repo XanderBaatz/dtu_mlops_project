@@ -200,7 +200,10 @@ uv run invoke train            # Run training
 uv run invoke evaluate         # Evaluate model
 uv run invoke test             # Run tests
 ```
-
+With hyperparameters and epochs:
+```sh
+uv run python src/dtu_mlops_project/train.py model=c8 trainer.max_epochs=1
+```
 ## Credits
 - [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template)
 - [Machine Learning Operations](https://github.com/SkafteNicki/dtu_mlops)
