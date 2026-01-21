@@ -3,36 +3,39 @@ import pandas as pd
 from evidently.legacy.report import Report
 from evidently.legacy.metric_preset import DataDriftPreset
 
+
 def load_images(path):
-    with open(path, 'rb') as f:
-        magic, num, rows, cols = np.frombuffer(
-            f.read(16), dtype='>u4'
-        )
+    with open(path, "rb") as f:
+        magic, num, rows, cols = np.frombuffer(f.read(16), dtype=">u4")
         images = np.frombuffer(f.read(), dtype=np.uint8)
         images = images.reshape(num, rows * cols)
     return images
 
+
 def load_labels(path):
-    with open(path, 'rb') as f:
-        magic, num = np.frombuffer(
-            f.read(8), dtype='>u4'
-        )
+    with open(path, "rb") as f:
+        magic, num = np.frombuffer(f.read(8), dtype=">u4")
         labels = np.frombuffer(f.read(), dtype=np.uint8)
     return labels
+
 
 def extract_features(X, eps=1e-8):
     std_pixel = X.std(axis=1)
     std_pixel += eps  # avoid divide by zero
-    return pd.DataFrame({
-        "mean_pixel": X.mean(axis=1),
-        "std_pixel": std_pixel,
-        "min_pixel": X.min(axis=1),
-        "max_pixel": X.max(axis=1),
-        "nonzero_ratio": (X > 0).mean(axis=1)
-    })
+    return pd.DataFrame(
+        {
+            "mean_pixel": X.mean(axis=1),
+            "std_pixel": std_pixel,
+            "min_pixel": X.min(axis=1),
+            "max_pixel": X.max(axis=1),
+            "nonzero_ratio": (X > 0).mean(axis=1),
+        }
+    )
+
 
 def remove_constant_columns(df):
     return df.loc[:, df.std(axis=0) > 0]
+
 
 if __name__ == "__main__":
     X_train = load_images("./data/fashion_mnist/raw/train-images-idx3-ubyte")

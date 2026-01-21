@@ -3,6 +3,7 @@ import random
 from locust import HttpUser, task, between
 from torchvision.datasets import FashionMNIST
 
+
 class FashionMNISTAPIUser(HttpUser):
     wait_time = between(0.5, 2)  # Random delay between requests
 
@@ -25,12 +26,8 @@ class FashionMNISTAPIUser(HttpUser):
 
         # Send request to the API
         with self.client.post(
-            "/predict",
-            files={"file": ("fashion.png", buf, "image/png")},
-            name="/predict (API)",
-            catch_response=True
+            "/predict", files={"file": ("fashion.png", buf, "image/png")}, name="/predict (API)", catch_response=True
         ) as response:
-
             # Fail only on real API issues
             if response.status_code != 200:
                 response.failure(f"HTTP {response.status_code}: {response.text}")

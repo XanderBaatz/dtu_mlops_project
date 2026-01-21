@@ -14,9 +14,11 @@ REPORT_PATH = Path("drift_report.html")
 X_train = load_images(DATA_DIR / "train-images-idx3-ubyte")
 reference_features = extract_features(X_train[:30000])
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 @app.post("/run_drift")
 def run_drift(current_batch_size: int = 1000):

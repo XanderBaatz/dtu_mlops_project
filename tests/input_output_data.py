@@ -15,7 +15,7 @@ if __name__ == "__main__":
     API_URL = "http://localhost:8000/predict"
 
     for img_array in images_to_send:
-        img = Image.fromarray(img_array.reshape(28,28).astype(np.uint8))
+        img = Image.fromarray(img_array.reshape(28, 28).astype(np.uint8))
 
         buffered = BytesIO()
         img.save(buffered, format="PNG")
