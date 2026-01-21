@@ -26,18 +26,6 @@ class MyDataset(Dataset):
         """Preprocess the raw data and save it to the output folder."""
 
 
-class RandomRotate:
-    def __init__(self, n: int):
-        assert n > 0, "n must be positive"
-        self.n = n
-        self.step = 360 / n
-
-    def __call__(self, img):
-        k = torch.randint(0, self.n, (1,)).item()
-        angle = k * self.step
-        return torchvision.transforms.functional.rotate(img, angle)
-
-
 # For use with rotation equivariance models
 # https://lightning.ai/docs/pytorch/latest/data/datamodule.html#what-is-a-datamodule
 class RotatedFashionMNIST(L.LightningDataModule):
@@ -57,7 +45,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
         # Define the transform to rotate images by 45 degrees
         self.transform = torchvision.transforms.Compose(
             [
-                RandomRotate(8),
+                torchvision.transforms.RandomRotation((45, 45)),
                 torchvision.transforms.ToTensor(),
             ]
         )
@@ -191,4 +179,7 @@ def dataset_statistics(data_dir: str = "data") -> None:
 
 
 if __name__ == "__main__":
-    dataset_statistics(data_dir="data")
+    # typer.run(preprocess)
+    # dataset = Planetoid(root="data", name="Cora")
+    ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
+    print(len(ds.classes))
