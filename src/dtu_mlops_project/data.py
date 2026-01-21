@@ -76,7 +76,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
         self.data_predict: Optional[Dataset] = None
 
         # Dataset properties
-        self.dims = (1, 28, 28)
+        self._dims = (1, 28, 28)
         self.batch_size_per_device = batch_size
 
         # Set multiprocessing context based on platform:
@@ -105,7 +105,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
 
         :return: Shape tuple for FashionMNIST images (1, 28, 28).
         """
-        return (1, 28, 28)
+        return self._dims
 
     def prepare_data(self) -> None:
         # Download the dataset
