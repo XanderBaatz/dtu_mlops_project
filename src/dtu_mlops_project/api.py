@@ -59,7 +59,11 @@ def _load_model() -> torch.nn.Module:
     if not MODEL_PATH.exists():
         raise FileNotFoundError(f"Model checkpoint not found at {MODEL_PATH}")
 
-    model = CNN(net=_net_config(), optimizer=partial(torch.optim.Adam, lr=1e-3))
+    model = CNN(
+        net=_net_config(),  # type: ignore[arg-type]
+        optimizer=partial(torch.optim.Adam, lr=1e-3),  # type: ignore[arg-type]
+    )
+
     checkpoint = torch.load(MODEL_PATH, map_location=torch.device("cpu"))
     state_dict = checkpoint.get("state_dict", checkpoint)
     model.load_state_dict(state_dict, strict=False)
@@ -78,7 +82,7 @@ async def predict(file: UploadFile = File(...)) -> JSONResponse:
     """Predict Fashion-MNIST class from an uploaded image file."""
     try:
         contents = await file.read()
-        image = Image.open(BytesIO(contents))
+        image: Image.Image = Image.open(BytesIO(contents))
     except UnidentifiedImageError as exc:
         raise HTTPException(status_code=400, detail="Invalid image file.") from exc
 
