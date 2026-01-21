@@ -75,7 +75,6 @@ class RotatedFashionMNIST(L.LightningDataModule):
 
         # Dataset properties
         self.dims = (1, 28, 28)
-        self.num_classes = 10
         self.batch_size_per_device = batch_size
 
         # Set multiprocessing context based on platform:
@@ -89,6 +88,14 @@ class RotatedFashionMNIST(L.LightningDataModule):
             self._multiprocessing_context = "spawn"
         else:
             self._multiprocessing_context = None
+
+    @property
+    def num_classes(self) -> int:
+        """Get the number of classes.
+
+        :return: The number of MNIST classes (10).
+        """
+        return 10
 
     def prepare_data(self) -> None:
         # Download the dataset
