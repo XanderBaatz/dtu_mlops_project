@@ -9,4 +9,3 @@ prefetch_factor: 2  # Batches to prefetch per worker
 train_val_split: [55_000, 5_000]
 pin_memory: False
 subset_fraction: 1.0
-

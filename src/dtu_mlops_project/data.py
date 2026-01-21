@@ -54,7 +54,6 @@ class RotatedFashionMNIST(L.LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         subset_fraction: float = 1.0,
-        pin_memory: bool = False,
         persistent_workers: bool = False,
         prefetch_factor: Optional[int] = None,
     ) -> None:
@@ -100,7 +99,6 @@ class RotatedFashionMNIST(L.LightningDataModule):
         :return: The number of MNIST classes (10).
         """
         return 10
-
 
     def prepare_data(self) -> None:
         # Download the dataset
@@ -152,7 +150,6 @@ class RotatedFashionMNIST(L.LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
-            pin_memory=self.hparams.pin_memory,
             persistent_workers=self.hparams.persistent_workers and self.hparams.num_workers > 0,
             prefetch_factor=self.hparams.prefetch_factor if self.hparams.num_workers > 0 else None,
             multiprocessing_context=self._multiprocessing_context if self.hparams.num_workers > 0 else None,
@@ -165,7 +162,6 @@ class RotatedFashionMNIST(L.LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
-            pin_memory=self.hparams.pin_memory,
             persistent_workers=self.hparams.persistent_workers and self.hparams.num_workers > 0,
             prefetch_factor=self.hparams.prefetch_factor if self.hparams.num_workers > 0 else None,
             multiprocessing_context=self._multiprocessing_context if self.hparams.num_workers > 0 else None,
