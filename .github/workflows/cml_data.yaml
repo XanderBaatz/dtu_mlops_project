@@ -1,0 +1,66 @@
+name: DVC Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/*.dvc'
+      - '.dvc/**'
+
+jobs:
+  run_data_checker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      # Keep Python setup, but uv will manage the venv
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      # Install uv
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      # Install dependencies via uv
+      - name: Install dependencies
+        run: |
+          uv sync --frozen
+          uv pip list
+
+      # Auth with GCP (unchanged)
+      - name: Auth with GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # Pull data (unchanged)
+      - name: Pull data
+        run: |
+          dvc pull --no-run-cache
+
+      # Generate report
+      - name: Check data statistics & generate report
+        run: |
+          mkdir -p reports/figures
+          uv run python src/dtu_mlops_project/data.py > reports/data_statistics.md
+          echo '![](./reports/figures/sample_images.png "Rotated FashionMNIST images")' >> reports/data_statistics.md
+          echo '![](./reports/figures/train_label_distribution.pdf "Train label distribution")' >> reports/data_statistics.md
+          echo '![](./reports/figures/test_label_distribution.pdf "Test label distribution")' >> reports/data_statistics.md
+
+      # Setup CML
+      - name: Setup cml
+        uses: iterative/setup-cml@v2
+
+      # Comment on PR
+      - name: Comment on PR
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cml comment create reports/data_statistics.md --watermark-title="Data Checker"
