@@ -59,6 +59,7 @@ dev = [
     "mkdocstrings-python==1.12.2",
     "google-api-python-client>=2.187.0",
     "pytest-cov>=6.3.0",
+    "mypy>=1.19.1",
 ]
 
 #[tool.uv]
