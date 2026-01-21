@@ -1,6 +1,5 @@
 from data_drift_detection import load_images, load_labels, extract_features
 import requests
-import pandas as pd
 from PIL import Image
 import numpy as np
 from io import BytesIO
