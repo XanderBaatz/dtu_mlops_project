@@ -2,4 +2,7 @@ _target_: dtu_mlops_project.data.RotatedFashionMNIST
 
 data_dir: ${paths.data_dir}
 batch_size: 32
+train_val_split: [55_000, 5_000]
 num_workers: 0
+pin_memory: False
+subset_fraction: 1.0
