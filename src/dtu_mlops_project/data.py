@@ -54,6 +54,8 @@ class RotatedFashionMNIST(L.LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
         subset_fraction: float = 1.0,
+        persistent_workers: bool = False,
+        prefetch_factor: Optional[int] = None,
     ) -> None:
         super().__init__()
 
