@@ -21,3 +21,6 @@ workerPoolSpecs:
 #    --region=europe-west1 \
 #    --display-name=test-run \
 #    --config=configs/vertex_ai/config.yaml
+
+
+#Kan tilgås: https://console.cloud.google.com/vertex-ai/training/custom-jobs?project=project-1ae70a6c-230c-4a5d-a4f
