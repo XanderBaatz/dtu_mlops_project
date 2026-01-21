@@ -59,6 +59,9 @@ dev = [
     "mkdocstrings-python==1.12.2",
     "google-api-python-client>=2.187.0",
     "pytest-cov>=6.3.0",
+    "mypy>=1.19.1",
+  "pandas-stubs>=2.3.2",
+  "types-requests>=2.32.0.20241016",
 ]
 
 #[tool.uv]
@@ -79,6 +82,22 @@ torchvision = [
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = ["src"]
+explicit_package_bases = true
+ignore_missing_imports = true
+install_types = true
+non_interactive = true
+
+[[tool.mypy.overrides]]
+module = ["escnn.*", "evidently.*", "rootutils.*", "torchvision.*", "pandas"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*", "dtu_mlops_project.model", "dtu_mlops_project.data"]
+ignore_errors = true
 
 [tool.ruff]
 line-length = 120
