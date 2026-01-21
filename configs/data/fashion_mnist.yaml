@@ -2,7 +2,10 @@ _target_: dtu_mlops_project.data.RotatedFashionMNIST
 
 data_dir: ${paths.data_dir}
 batch_size: 32
+
+num_workers: 4  # Parallel data loading workers (adjust based on CPU cores)
+persistent_workers: true  # Keep workers alive between epochs
+prefetch_factor: 2  # Batches to prefetch per worker
 train_val_split: [55_000, 5_000]
-num_workers: 0
 pin_memory: False
 subset_fraction: 1.0
