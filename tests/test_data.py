@@ -12,13 +12,14 @@ class TestRotatedFashionMNIST:
     @pytest.fixture
     def data_module(self, tmp_path):
         """Create a RotatedFashionMNIST instance with temporary data directory."""
-        return RotatedFashionMNIST(data_dir=str(tmp_path), batch_size=32, num_workers=0, seed=42, subset_fraction=1.0)
+        return RotatedFashionMNIST(
+            data_dir=str(tmp_path), batch_size=32, train_val_split=(55_000, 5_000), num_workers=0, subset_fraction=1.0
+        )
 
     def test_initialization(self, data_module):
         """Test that RotatedFashionMNIST initializes correctly."""
         assert data_module.hparams.batch_size == 32
         assert data_module.hparams.num_workers == 0
-        assert data_module.hparams.seed == 42
         assert data_module.hparams.subset_fraction == 1.0
 
     def test_num_classes(self, data_module):
@@ -37,25 +38,25 @@ class TestRotatedFashionMNIST:
         data_module.prepare_data()
         data_module.setup(stage="fit")
 
-        assert hasattr(data_module, "train_dataset")
-        assert hasattr(data_module, "val_dataset")
-        assert len(data_module.train_dataset) == 50000
-        assert len(data_module.val_dataset) == 10000
+        assert hasattr(data_module, "data_train")
+        assert hasattr(data_module, "data_val")
+        assert len(data_module.data_train) == 55000
+        assert len(data_module.data_val) == 5000
 
     def test_setup_test_stage(self, data_module):
         """Test setup method with test stage."""
         data_module.prepare_data()
         data_module.setup(stage="test")
 
-        assert hasattr(data_module, "test_dataset")
-        assert len(data_module.test_dataset) == 10000
+        assert hasattr(data_module, "data_test")
+        assert len(data_module.data_test) == 10000
 
     def test_setup_predict_stage(self, data_module):
         """Test setup method with predict stage."""
         data_module.prepare_data()
         data_module.setup(stage="predict")
 
-        assert hasattr(data_module, "predict_dataset")
+        assert hasattr(data_module, "data_predict")
 
     def test_train_dataloader(self, data_module):
         """Test train_dataloader returns a valid DataLoader."""
@@ -87,16 +88,16 @@ class TestRotatedFashionMNIST:
     def test_subset_fraction(self, tmp_path):
         """Test that subset_fraction correctly reduces dataset size."""
         data_module = RotatedFashionMNIST(
-            data_dir=str(tmp_path), batch_size=32, num_workers=0, seed=42, subset_fraction=0.1
+            data_dir=str(tmp_path), batch_size=32, train_val_split=(55_000, 5_000), num_workers=0, subset_fraction=0.1
         )
         data_module.prepare_data()
         data_module.setup(stage="fit")
 
-        expected_train_size = int(50000 * 0.1)
-        expected_val_size = int(10000 * 0.1)
+        expected_train_size = int(55000 * 0.1)
+        expected_val_size = int(5000 * 0.1)
 
-        assert len(data_module.train_dataset) == expected_train_size
-        assert len(data_module.val_dataset) == expected_val_size
+        assert len(data_module.data_train) == expected_train_size
+        assert len(data_module.data_val) == expected_val_size
 
     def test_batch_loading(self, data_module):
         """Test that batches can be loaded from dataloaders."""
@@ -142,19 +143,20 @@ class TestRotatedFashionMNIST:
 
     def test_train_val_test_split_consistency(self, tmp_path):
         """Test that train/val/test splits are created consistently."""
-        seed = 123
 
-        data_module = RotatedFashionMNIST(data_dir=str(tmp_path), batch_size=32, seed=seed)
+        data_module = RotatedFashionMNIST(
+            data_dir=str(tmp_path), batch_size=32, train_val_split=(55_000, 5_000), num_workers=0, subset_fraction=1.0
+        )
         data_module.prepare_data()
         data_module.setup(stage="fit")
 
         # Verify split sizes are correct
-        assert len(data_module.train_dataset) == 50000
-        assert len(data_module.val_dataset) == 10000
+        assert len(data_module.data_train) == 55000
+        assert len(data_module.data_val) == 5000
 
         # All samples should be unique between train and val
-        train_indices = set(data_module.train_dataset.indices)
-        val_indices = set(data_module.val_dataset.indices)
+        train_indices = set(data_module.data_train.indices)
+        val_indices = set(data_module.data_val.indices)
         assert len(train_indices & val_indices) == 0  # No overlap
 
 

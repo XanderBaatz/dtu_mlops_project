@@ -14,3 +14,10 @@ or
 ```sh
 uv run coverage report -m
 ```
+
+# To test the api with locust run (where the first line is starting the api)
+```sh
+uv run uvicorn src.dtu_mlops_project.apifile:app --reload
+uv run locust -f tests/locustfile.py
+```
+# then open http://localhost:8089/ in a browser and use http://127.0.0.1:8000 as host (or whatever port you used for running locust and the api).
