@@ -227,7 +227,7 @@ class CNN(L.LightningModule):
         return {"optimizer": optimizer}
 
 
-# Define steerable CNN model that mirrors CNN architecture with C8 equivariance
+# Define steerable CNN model
 class C8SteerableCNN(L.LightningModule):
     def __init__(
         self,
@@ -238,41 +238,26 @@ class C8SteerableCNN(L.LightningModule):
 
         self.save_hyperparameters(logger=False)
 
-        # Build C8-equivariant analogue of the plain CNN: two conv blocks with pooling
+        # Model
         self.r2_act = gspaces.rot2dOnR2(N=8)
         self.input_type = enn.FieldType(self.r2_act, self.hparams.net.input_channels * [self.r2_act.trivial_repr])
 
-        # Match parameter count of CNN (~9.1K) using fewer regular representations
-        # (regular repr is 8-dim for C8, so fewer channels are needed to match baseline)
-        block1_out = enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr])
-        block2_out = enn.FieldType(self.r2_act, 8 * [self.r2_act.regular_repr])
+        out_type = enn.FieldType(self.r2_act, 4 * [self.r2_act.regular_repr])
 
         self.block = enn.SequentialModule(
             enn.R2Conv(
                 self.input_type,
-                block1_out,
+                out_type,
                 kernel_size=self.hparams.net.kernel_size,
                 padding=self.hparams.net.padding,
-                bias=True,
+                bias=False,
             ),
-            enn.ReLU(block1_out, inplace=True),
-            enn.PointwiseMaxPool(block1_out, 2),
-            enn.R2Conv(
-                block1_out,
-                block2_out,
-                kernel_size=self.hparams.net.kernel_size,
-                padding=self.hparams.net.padding,
-                bias=True,
-            ),
-            enn.ReLU(block2_out, inplace=True),
-            enn.PointwiseMaxPool(block2_out, 2),
-            # Group pooling collapses orientation dimension, yielding 16 channels like the plain CNN
-            enn.GroupPooling(block2_out),
+            enn.ReLU(out_type, inplace=True),
+            enn.PointwiseMaxPool(out_type, self.hparams.net.pooling_size),
+            enn.GroupPooling(out_type),
         )
 
-        # After two 2x2 pools on 28x28 inputs, we have 7x7 spatial features
-        # GroupPooling collapses orientation: 8 regular reps → 8 scalar channels
-        self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(8 * 7 * 7, self.hparams.net.num_classes))
+        self.classifier = nn.Sequential(nn.Flatten(), nn.Linear(4 * 14 * 14, self.hparams.net.num_classes))
 
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
