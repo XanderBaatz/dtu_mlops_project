@@ -23,6 +23,7 @@ command:
   - python
   - ${program}
   - model=cnn
-  - trainer.max_epochs=2
+  - trainer.max_epochs=10
+  - +trainer.limit_train_batches=0.5
   - logger=wandb
   - ${args_no_hyphens}
