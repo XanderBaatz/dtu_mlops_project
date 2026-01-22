@@ -65,7 +65,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
         train_val_split: Tuple[int, int] = (55_000, 5_000),
         num_workers: int = 0,
         pin_memory: bool = False,
-        subset_fraction: float = 1.0,
+        subset_fraction: float = 0.1,
         persistent_workers: bool = False,
         prefetch_factor: Optional[int] = None,
     ) -> None:

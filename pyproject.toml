@@ -39,6 +39,7 @@ dependencies = [
     "onnxruntime>=1.23.2",
     "onnxscript>=0.5.0",
     "pandas>=2.3.3",
+    "prometheus-client>=0.24.1",
     "python-multipart>=0.0.21",
     "rdkit>=2025.9.3",
     "rootutils>=1.0.7",
