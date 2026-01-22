@@ -127,7 +127,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 1 fill here ---
+Group 80.
 
 ### Question 2
 > **Enter the study number for each member in the group**
@@ -138,7 +138,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 2 fill here ---
+s234744, s234815, s234845, s246222
 
 ### Question 3
 > **Did you end up using any open-source frameworks/packages not covered in the course during your project? If so**
@@ -152,7 +152,8 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 3 fill here ---
+- [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): Although PyTorch Lightning is mentioned (and recommended) in the course, it is not directly shown how it can be implemented. We have used this extensively to stick to a standardized code framework and structure. This has enabled us to utilize a plethora of nice features such as logging, training and data module creation. A lot of the course code has either been refactored or rewritten to work with lightning on our end, such as [train.py](../src/dtu_mlops_project/train.py).
+- [escnn](https://github.com/QUVA-Lab/escnn): An extension to PyTorch that enables the creation of equivariant, steerable, convolutional neural networks. We have used this library to make a steerable CNN that is discretely equivariant to rotatation of 45 degrees. To see the effect of this we transformed the FashionMNIST dataset to include rotated datapoints at random. We then compare a regular CNN (only equivariant to translation) to a group-equivariant CNN, which is both equivariant to translation and rotation groups.
 
 ## Coding environment
 
@@ -172,7 +173,19 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 4 fill here ---
+Python dependencies are basically entirely managed by `uv`. When a new dependency is required for deployment we can simply add it using:
+```bash
+uv add <package name>
+```
+
+In case a package is needed for development only (e.g. `ruff` or the Google API), we can add it using:
+```bash
+uv add --dev <package name>
+```
+
+This has streamlined the process of working with Docker images and containers both in development ([devcontainer](../.devcontainer/)) and deployment ([dockerfiles](../dockerfiles/)). It also ensures that all of us are working on the same base system.
+
+The entire list of dependencies can be of course be found in [pyproject.toml](../pyproject.toml) and [uv.lock](../uv.lock) which `uv` appends to by default.
 
 ### Question 5
 
@@ -188,7 +201,9 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 5 fill here ---
+We have mostly been sticking to the pre-defined layout of the cookiecutter template. However we have greatly expanded the configs folder for Hydra - inspired by [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template). We have also added a dedicated folder for Google Cloud stuff in gcp.
+
+The full repository structure can be found [here](../README.md#project-structure).
 
 ### Question 6
 
@@ -203,7 +218,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 6 fill here ---
+We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP484 compliant. These have also been added to pre-commit which ensures that the code is checked before being committed and eventually pushed.
 
 ## Version control
 
@@ -222,7 +237,7 @@ will check the repositories and the code to verify your answers.
 >
 > Answer:
 
---- question 7 fill here ---
+In total we have implemented 3 main tests. One for the API, one for the dataset/datamodule and another one for the models.
 
 ### Question 8
 
