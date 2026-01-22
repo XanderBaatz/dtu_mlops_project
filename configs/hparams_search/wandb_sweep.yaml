@@ -22,8 +22,8 @@ command:
   - run
   - python
   - ${program}
-  - model=cnn
+  - model=c8
   - trainer.max_epochs=10
-  - +trainer.limit_train_batches=0.5
+  - +trainer.limit_train_batches=1
   - logger=wandb
   - ${args_no_hyphens}
