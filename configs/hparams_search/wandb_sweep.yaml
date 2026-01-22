@@ -22,5 +22,8 @@ command:
   - run
   - python
   - ${program}
+  - model=c8
+  - trainer.max_epochs=10
+  - +trainer.limit_train_batches=1
   - logger=wandb
   - ${args_no_hyphens}
