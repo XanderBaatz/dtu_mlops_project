@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Dict, List
 from loguru import logger
 
@@ -73,13 +74,15 @@ def train(cfg: DictConfig) -> Dict[str, Any] | None:
     if cfg.get("test", True):
         logger.info("Starting testing...")
         test_metrics: Dict[str, Any] = {}
-        # ckpt_path = None
-        # for cb in callbacks:
-        #    if isinstance(cb, ModelCheckpoint):
-        #        ckpt_path = cb.best_model_path or None
-        # trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
         trainer.test(model=model, datamodule=datamodule)
         test_metrics = trainer.callback_metrics
+
+        # If we trained the C8 Steerable model, export its weights to models/model.pth for the API
+        if cfg.model.get("_target_") == "src.dtu_mlops_project.model.C8SteerableCNN":
+            export_path = Path("models/model.pth")
+            export_path.parent.mkdir(parents=True, exist_ok=True)
+            torch.save(model.state_dict(), export_path)
+            logger.info(f"Saved C8SteerableCNN weights to {export_path}")
 
         # Export to ONNX if requested
         if cfg.get("export_onnx", False):
