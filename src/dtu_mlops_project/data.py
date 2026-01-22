@@ -246,5 +246,6 @@ def dataset_statistics(data_dir: str = "data") -> None:
 
 
 if __name__ == "__main__":
-    ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
-    print(len(ds.classes))
+    # ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
+    # print(len(ds.classes))
+    dataset_statistics(data_dir="data")
