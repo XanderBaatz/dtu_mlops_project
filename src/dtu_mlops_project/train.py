@@ -1,8 +1,6 @@
 from typing import Any, Dict, List
 from loguru import logger
 
-import os
-
 import hydra
 import lightning as L
 import torch
@@ -23,11 +21,6 @@ load_dotenv()
 
 # Device configuration
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
-
-# WandB configuration
-api_key = os.getenv("WANDB_API_KEY")
-wandb_project = os.getenv("WANDB_PROJECT")
-wandb_entity = os.getenv("WANDB_ENTITY")
 
 
 @hydra.main(version_base="1.3", config_path="../../configs", config_name="train")
