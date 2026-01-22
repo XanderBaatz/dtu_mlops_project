@@ -22,5 +22,7 @@ command:
   - run
   - python
   - ${program}
+  - model=cnn
+  - trainer.max_epochs=2
   - logger=wandb
   - ${args_no_hyphens}
