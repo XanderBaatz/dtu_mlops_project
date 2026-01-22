@@ -218,7 +218,16 @@ The full repository structure can be found [here](../README.md#project-structure
 >
 > Answer:
 
-We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP484 compliant. These have also been added to pre-commit which ensures that the code is checked before being committed and eventually pushed.
+We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP8 and PEP484 compliant. These have also been added to pre-commit which ensures that the code is checked before being committed and eventually pushed.
+We can quickly run these to check if our code is correctly formatted:
+```bash
+uv run ruff check .
+```
+
+and:
+```
+uv run mypy .
+```
 
 ## Version control
 
@@ -237,7 +246,12 @@ We have used `ruff` for linting and `mypy` for typing check. These tools enable 
 >
 > Answer:
 
-In total we have implemented 3 main tests. One for the API, one for the dataset/datamodule and another one for the models.
+In total we have implemented X main tests:
+- [test_api.py](../tests/test_api.py): ...
+- [test_data.py](../tests/test_data.py): Tests initialization, expected number of classes, various setup stages, dataloader, subsetting etc. for the dataset (rotated FashionMNIST) that we've employed. This ensures that our dataset works as expected.
+- [test_model.py](../tests/test_model.py): Tests model forward pass, batching, expected training and test step etc.
+
+DER SKAL FYLDES MERE UD FOR OVEN!!!
 
 ### Question 8
 
@@ -267,7 +281,7 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 >
 > Answer:
 
---- question 9 fill here ---
+We made use of both branches and pull requests in our project. We mainly used the branches as minor stepping stones for implementing various steps. Some branches incorporate massive changes and reworks while others are just minor fixes and patches. Upon merging the pull requests were run through the workflows that we've set up to--- question 11 fill here --- check that the new changes work as expected without breakage.
 
 ### Question 10
 
@@ -299,7 +313,7 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 >
 > Answer:
 
---- question 11 fill here ---
+We use GitHub workflows for continuous integration where we have implemented linting (`ruff` and `mypy`) and unit tests for all major operating systems (Linux, MacOS, Windows).
 
 ## Running code and tracking experiments
 
