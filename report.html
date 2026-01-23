@@ -72,16 +72,16 @@ will check the repositories and the code to verify your answers.</p>
 <li>[x] Write API tests for your application and setup continues integration for these (M24)</li>
 <li>[x] Load test your application (M24)</li>
 <li>[x] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)</li>
-<li>[x] Create a frontend for your API (M26)</li>
+<li>[ ] Create a frontend for your API (M26)</li>
 </ul>
 <h3>Week 3</h3>
 <ul>
 <li>[x] Check how robust your model is towards data drifting (M27)</li>
 <li>[x] Setup collection of input-output data from your deployed application (M27)</li>
 <li>[x] Deploy to the cloud a drift detection API (M27)</li>
-<li>[ ] Instrument your API with a couple of system metrics (M28)</li>
-<li>[ ] Setup cloud monitoring of your instrumented application (M28)</li>
-<li>[ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)</li>
+<li>[x] Instrument your API with a couple of system metrics (M28)</li>
+<li>[x] Setup cloud monitoring of your instrumented application (M28)</li>
+<li>[x] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)</li>
 <li>[ ] If applicable, optimize the performance of your data loading using distributed data loading (M29)</li>
 <li>[ ] If applicable, optimize the performance of your training pipeline by using distributed training (M30)</li>
 <li>[ ] Play around with quantization, compilation and pruning for you trained models to increase inference speed (M31)</li>
@@ -217,8 +217,8 @@ Under data tests, there are different tests that check the pipeline - focusing o
 <em>addition to the main branch. To merge code we ...</em></p>
 <p>Answer:</p>
 </blockquote>
-<p>As the main branch is push-restricted, it was necessary to create a branch, which had to be approved by unit-testing before being able to merge to main. This ensured that a feature that potentially breaks something vital didn't get merged directly into main. This is especially seen in one of our merges, where the unit testing caught an error with the data, which could be fixed later on, before merging to main. </p>
-<p>But the power of working on branches also made it possible for us to collaborate on features, before we made our docker cross compatible. An example is the ARM support for ESCNN, where we could collaborate on the training architecture and merge into main. </p>
+<p>As the main branch is push-restricted, it was necessary to create a branch, which had to be approved by unit-testing before being able to merge to main. This ensured that a feature that potentially breaks something vital didn't get merged directly into main. This is especially seen in one of our merges, where the unit testing caught an error with the data, which could be fixed later on, before merging to main.</p>
+<p>But the power of working on branches also made it possible for us to collaborate on features, before we made our docker cross compatible. An example is the ARM support for ESCNN, where we could collaborate on the training architecture and merge into main.</p>
 <h3>Question 10</h3>
 <blockquote>
 <p><strong>Did you use DVC for managing data in your project? If yes, then how did it improve your project to have version</strong>
@@ -230,7 +230,7 @@ Under data tests, there are different tests that check the pipeline - focusing o
 <p>Answer:</p>
 </blockquote>
 <p>We configured DVC with Google Cloud Storage (gs://mlops_80) and tracked our data directory using data.dvc, which allowed us to set up the necessary infrastructure for data versioning and reproducibility from the start. This ensured that the project was technically ready to handle dataset changes and scale to larger or more dynamic data sources in the future.
-In practice, we did not, however, rely on dvcs versioning features, our dataset is static and automatically downloaded through PyTorch, meaning there were no changes in the underlying data, that required version tracking. Because of this, benefits of dvc were limited in our case. Though DVC would have been beneficial if we experimented with different dataset versions etc, or we were synthetical producing images. </p>
+In practice, we did not, however, rely on dvcs versioning features, our dataset is static and automatically downloaded through PyTorch, meaning there were no changes in the underlying data, that required version tracking. Because of this, benefits of dvc were limited in our case. Though DVC would have been beneficial if we experimented with different dataset versions etc, or we were synthetical producing images.</p>
 <h3>Question 11</h3>
 <blockquote>
 <p><strong>Discuss you continuous integration setup. What kind of continuous integration are you running (unittesting,</strong>
@@ -262,7 +262,7 @@ especially the reproducibility of your experiments.</p>
 <p>Answer:</p>
 </blockquote>
 <p>For a hyperparameter optimization experiment:
-We use configs/hparams_search/wandb_sweep.yaml as a configure of the search method, eg random or grid. And also the ranges of hyperparameter such as learning rate, batch size etc. For each sweep trial, a model is initiated with the chosen hyperparameter of the current search using pytorch lightning.  </p>
+We use configs/hparams_search/wandb_sweep.yaml as a configure of the search method, eg random or grid. And also the ranges of hyperparameter such as learning rate, batch size etc. For each sweep trial, a model is initiated with the chosen hyperparameter of the current search using pytorch lightning.</p>
 <p>Its possible to run an experiment using CLI:</p>
 <p>First to intialise a sweep:
 <code>bash
@@ -375,15 +375,15 @@ gcloud services list --enabled</code></p>
 <em>using a custom container: ...</em></p>
 <p>Answer:</p>
 </blockquote>
-<p>As we also touched in question 17, we primary used the Vertex Ai to initialise a VM using a docker with config file. As this was faster (as shown in lectures) than setting up a VM ourself. </p>
-<p>In the config file + docker file, we specified what VN we wanted, so we got a server in west europe. With a n1-highmem-2 CPU only architecture, . </p>
+<p>As we also touched in question 17, we primary used the Vertex Ai to initialise a VM using a docker with config file. As this was faster (as shown in lectures) than setting up a VM ourself.</p>
+<p>In the config file + docker file, we specified what VN we wanted, so we got a server in west europe. With a n1-highmem-2 CPU only architecture, .</p>
 <p>In order to build the image on the VM we used command:
 <code>bash
 gcloud builds submit . --config cloudbuild.yaml --substitutions=_IMAGE=api,_TAG=$(git rev-parse --short HEAD)</code></p>
 <p>In order to train on the newly created image, we use command:
 <code>bash
 gcloud ai custom-jobs create --region=europe-west1 --display-name=training-job --config=configs/vertex_ai/config_cpu.yaml</code>
-In the config file, we also specify epochs, hyperparameters etc as per usual. </p>
+In the config file, we also specify epochs, hyperparameters etc as per usual.</p>
 <p>This made it possible to train multiple, very large models over the night instead of doing it loccally.</p>
 <h3>Question 19</h3>
 <blockquote>
@@ -391,21 +391,21 @@ In the config file, we also specify epochs, hyperparameters etc as per usual. </
 <strong>You can take inspiration from <a href="figures/bucket.png">this figure</a>.</strong></p>
 <p>Answer:</p>
 </blockquote>
-<p><img alt="bucket" src="figures/bucket.png" /></p>
+<p><img alt="bucket" src="figures/Bucket.png" /></p>
 <h3>Question 20</h3>
 <blockquote>
 <p><strong>Upload 1-2 images of your GCP artifact registry, such that we can see the different docker images that you have</strong>
 <strong>stored. You can take inspiration from <a href="figures/registry.png">this figure</a>.</strong></p>
 <p>Answer:</p>
 </blockquote>
-<p><img alt="registry" src="figures/artifact-registry.png" /></p>
+<p><img alt="registry" src="figures/artifactRegistry.png" /></p>
 <h3>Question 21</h3>
 <blockquote>
 <p><strong>Upload 1-2 images of your GCP cloud build history, so we can see the history of the images that have been build in</strong>
 <strong>your project. You can take inspiration from <a href="figures/build.png">this figure</a>.</strong></p>
 <p>Answer:</p>
 </blockquote>
-<p><img alt="build" src="figures/build.png" /></p>
+<p><img alt="build" src="figures/DockerBuild.png" /></p>
 <h3>Question 22</h3>
 <blockquote>
 <p><strong>Did you manage to train your model in the cloud using either the Engine or Vertex AI? If yes, explain how you did</strong>
@@ -487,7 +487,7 @@ We have also created a few alerts, the first alert is CPU usage, if our API uses
 <em>costing the most was ... due to ... . Working in the cloud was ...</em></p>
 <p>Answer:</p>
 </blockquote>
-<p>Luckily our models were quite small, and fashion MNIST is also a very small dataset aswell, so we did not use that many credits. We even got free credits from the vertex AI activation, which was perfect as this was also the most expensive part, as we ran alot of training on this AI. </p>
+<p>Luckily our models were quite small, and fashion MNIST is also a very small dataset aswell, so we did not use that many credits. We even got free credits from the vertex AI activation, which was perfect as this was also the most expensive part, as we ran alot of training on this AI.</p>
 <p>In general cloud has so much potential to be utilized in for example our upcoming theises. But the learning curve is quite steep, and the interface is quite frankly terrifying at first.  But the plug-and-play-forget of the training after setting up vertexAI of multiple models is really good!</p>
 <h3>Question 28</h3>
 <blockquote>
@@ -527,8 +527,8 @@ Using the Evidently module (specifically the legacy code) it was possible to gen
 <em>The biggest challenges in the project was using ... tool to do ... . The reason for this was ...</em></p>
 <p>Answer:</p>
 </blockquote>
-<p>Overall the place where most hours was wasted troubleshooting and trying to get gcloud to work, for the API finding builds, that both didn't fail locally, but also didn't fail on the cloud, proved a more difficult task than anticipated. Setting up the GitHub CI, was also difficult, primarily because of gfortran and escnn issues, but also docker issues with MacOS and windows, we had to overcome this by creating a amd64 build inside the mac docker build. This had the downside that it was a bit slower, but now our docker was cross compatible. </p>
-<p>Initially understanding and converting the training script and datamodule to PyTorch Lightning proved to be a challenge, however once it was set up it was such a breeze to use. It also made Hydra configuration files much easier to implement and basically any extensions we wished for had a Lightning implementation (e.g. the loggers). </p>
+<p>Overall the place where most hours was wasted troubleshooting and trying to get gcloud to work, for the API finding builds, that both didn't fail locally, but also didn't fail on the cloud, proved a more difficult task than anticipated. Setting up the GitHub CI, was also difficult, primarily because of gfortran and escnn issues, but also docker issues with MacOS and windows, we had to overcome this by creating a amd64 build inside the mac docker build. This had the downside that it was a bit slower, but now our docker was cross compatible.</p>
+<p>Initially understanding and converting the training script and datamodule to PyTorch Lightning proved to be a challenge, however once it was set up it was such a breeze to use. It also made Hydra configuration files much easier to implement and basically any extensions we wished for had a Lightning implementation (e.g. the loggers).</p>
 <p>Getting to test the API also proved a bit difficult at first but once all the required commands and code was in place, it made perfect sense.</p>
 <p>Initial setup of WSL, also proved difficult, since windows would not allow the installation for unknown reasons, and after a couple of days, of not doing anything the issue was suddenly resolved.</p>
 <h3>Question 31</h3>
@@ -547,7 +547,7 @@ Answer:</p>
 </blockquote>
 <p>From the checklist tasks week 1-2-3 - what each of us worked most on:</p>
 <p>s234744: M2, M7, M12, M14, M16, M24, M27</p>
-<p>s234815: M2, M5, M6, M7, M10, M11, M14, M15, M19, M21 </p>
+<p>s234815: M2, M5, M6, M7, M10, M11, M14, M15, M19, M21</p>
 <p>s234845: M2, M6, M9, M10, M11, M14, M15, M21, M22, M25, M28</p>
 <p>s246222: M2, M7, (M8), M11, M16, M17, M18, M22, M23, M24, M29</p>
 <p>We mainly made use of GitHub copilot integrated into VSCode. This includes the chat function which was primarily used for debugging (e.g. Chat: Last terminal command) when a program failed to run. The inline auto-fill was also used whenever it produced wanted results. This saved us from manual debugging in many cases. Since this project had a boilerplate code base already available, as well as code solutions found on the website, we had a good starting point that we could essentially just conform to our needs. This also meant that it was relatively straight forward to bridge the gap between our thoughts and the pre-existing code base, with or without the use of AI. Additionally we also used Ai in spellchecking and proof-reading.</p>

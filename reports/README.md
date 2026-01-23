@@ -93,16 +93,16 @@ will check the repositories and the code to verify your answers.
 * [x] Write API tests for your application and setup continues integration for these (M24)
 * [x] Load test your application (M24)
 * [x] Create a more specialized ML-deployment API using either ONNX or BentoML, or both (M25)
-* [x] Create a frontend for your API (M26)
+* [ ] Create a frontend for your API (M26)
 
 ### Week 3
 
 * [x] Check how robust your model is towards data drifting (M27)
 * [x] Setup collection of input-output data from your deployed application (M27)
 * [x] Deploy to the cloud a drift detection API (M27)
-* [ ] Instrument your API with a couple of system metrics (M28)
-* [ ] Setup cloud monitoring of your instrumented application (M28)
-* [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
+* [x] Instrument your API with a couple of system metrics (M28)
+* [x] Setup cloud monitoring of your instrumented application (M28)
+* [x] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
 * [ ] If applicable, optimize the performance of your data loading using distributed data loading (M29)
 * [ ] If applicable, optimize the performance of your training pipeline by using distributed training (M30)
 * [ ] Play around with quantization, compilation and pruning for you trained models to increase inference speed (M31)
@@ -519,7 +519,7 @@ This made it possible to train multiple, very large models over the night instea
 >
 > Answer:
 
-![bucket](figures/bucket.png)
+![bucket](figures/Bucket.png)
 
 ### Question 20
 
@@ -528,7 +528,7 @@ This made it possible to train multiple, very large models over the night instea
 >
 > Answer:
 
-![registry](figures/artifact-registry.png)
+![registry](figures/artifactRegistry.png)
 
 ### Question 21
 
@@ -537,7 +537,7 @@ This made it possible to train multiple, very large models over the night instea
 >
 > Answer:
 
-![build](figures/build.png)
+![build](figures/DockerBuild.png)
 
 ### Question 22
 
