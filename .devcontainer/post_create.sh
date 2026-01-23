@@ -2,7 +2,7 @@
 set -e
 
 # System dependencies
-
+sudo rm /etc/apt/sources.list.d/yarn.list
 sudo apt-get update
 sudo apt-get install -y \
     gfortran \

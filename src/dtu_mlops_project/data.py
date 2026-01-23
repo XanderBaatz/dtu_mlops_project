@@ -1,4 +1,5 @@
 from pathlib import Path
+import platform
 import lightning as L
 import torch
 import torchvision
@@ -26,9 +27,37 @@ class MyDataset(Dataset):
         """Preprocess the raw data and save it to the output folder."""
 
 
+class RandomRotate:
+    def __init__(self, n: int):
+        assert n > 0, "n must be positive"
+        self.n = n
+        self.step = 360 / n
+
+    def __call__(self, img):
+        k = torch.randint(0, self.n, (1,), generator=torch.Generator().manual_seed(42)).item()
+        angle = k * self.step
+        return torchvision.transforms.functional.rotate(img, angle)
+
+
 # For use with rotation equivariance models
 # https://lightning.ai/docs/pytorch/latest/data/datamodule.html#what-is-a-datamodule
 class RotatedFashionMNIST(L.LightningDataModule):
+    """LightningDataModule for Fashion MNIST with rotation augmentation and parallel data loading.
+
+    Args:
+        data_dir: Directory to store the dataset.
+        batch_size: Batch size for training/validation/test.
+        num_workers: Number of worker processes for data loading. Set > 0 for parallel loading.
+        seed: Random seed for reproducibility.
+        subset_fraction: Fraction of dataset to use (for debugging/testing).
+        pin_memory: If True, the data loader will copy Tensors into CUDA pinned memory.
+            Recommended when using GPU for faster data transfer.
+        persistent_workers: If True, the data loader will not shutdown the worker processes
+            after a dataset has been consumed once. Useful when num_workers > 0.
+        prefetch_factor: Number of batches loaded in advance by each worker.
+            Only used when num_workers > 0.
+    """
+
     def __init__(
         self,
         data_dir: str = "data",
@@ -36,7 +65,9 @@ class RotatedFashionMNIST(L.LightningDataModule):
         train_val_split: Tuple[int, int] = (55_000, 5_000),
         num_workers: int = 0,
         pin_memory: bool = False,
-        subset_fraction: float = 1.0,
+        subset_fraction: float = 0.1,
+        persistent_workers: bool = False,
+        prefetch_factor: Optional[int] = None,
     ) -> None:
         super().__init__()
 
@@ -45,7 +76,7 @@ class RotatedFashionMNIST(L.LightningDataModule):
         # Define the transform to rotate images by 45 degrees
         self.transform = torchvision.transforms.Compose(
             [
-                torchvision.transforms.RandomRotation((45, 45)),
+                RandomRotate(8),
                 torchvision.transforms.ToTensor(),
             ]
         )
@@ -57,9 +88,36 @@ class RotatedFashionMNIST(L.LightningDataModule):
         self.data_predict: Optional[Dataset] = None
 
         # Dataset properties
-        self.dims = (1, 28, 28)
-        self.num_classes = 10
+        self._dims = (1, 28, 28)
         self.batch_size_per_device = batch_size
+
+        # Set multiprocessing context based on platform:
+        # - macOS (Darwin): use "fork" for compatibility with M1/M2 chips
+        # - Windows: only "spawn" is supported
+        # - Linux: None (uses default, which is "fork")
+        system = platform.system()
+        if system == "Darwin":
+            self._multiprocessing_context = "fork"
+        elif system == "Windows":
+            self._multiprocessing_context = "spawn"
+        else:
+            self._multiprocessing_context = None
+
+    @property
+    def num_classes(self) -> int:
+        """Get the number of classes.
+
+        :return: The number of MNIST classes (10).
+        """
+        return 10
+
+    @property
+    def dims(self) -> tuple:
+        """Get the shape of a single sample (channels, height, width).
+
+        :return: Shape tuple for FashionMNIST images (1, 28, 28).
+        """
+        return self._dims
 
     def prepare_data(self) -> None:
         # Download the dataset
@@ -111,6 +169,9 @@ class RotatedFashionMNIST(L.LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=True,
+            persistent_workers=self.hparams.persistent_workers and self.hparams.num_workers > 0,
+            prefetch_factor=self.hparams.prefetch_factor if self.hparams.num_workers > 0 else None,
+            multiprocessing_context=self._multiprocessing_context if self.hparams.num_workers > 0 else None,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
@@ -120,15 +181,21 @@ class RotatedFashionMNIST(L.LightningDataModule):
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
+            persistent_workers=self.hparams.persistent_workers and self.hparams.num_workers > 0,
+            prefetch_factor=self.hparams.prefetch_factor if self.hparams.num_workers > 0 else None,
+            multiprocessing_context=self._multiprocessing_context if self.hparams.num_workers > 0 else None,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
         return DataLoader(
-            dataset=self.data_test,
+            dataset=self.data_val,
             batch_size=self.batch_size_per_device,
             num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
             shuffle=False,
+            pin_memory=self.hparams.pin_memory,
+            persistent_workers=self.hparams.persistent_workers and self.hparams.num_workers > 0,
+            prefetch_factor=self.hparams.prefetch_factor if self.hparams.num_workers > 0 else None,
+            multiprocessing_context=self._multiprocessing_context if self.hparams.num_workers > 0 else None,
         )
 
 
@@ -179,7 +246,6 @@ def dataset_statistics(data_dir: str = "data") -> None:
 
 
 if __name__ == "__main__":
-    # typer.run(preprocess)
-    # dataset = Planetoid(root="data", name="Cora")
-    ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
-    print(len(ds.classes))
+    # ds = FashionMNIST(root="data", download=True, transform=torchvision.transforms.ToTensor())
+    # print(len(ds.classes))
+    dataset_statistics(data_dir="data")

@@ -3,15 +3,19 @@
 DTU machine learning operations project
 
 ## Project description
-The goal of this project is to implement, optimize, and evaluate a steerable group equivariant convolutional neural network (GCNN) using escnn, a PyTorch-based library that enables the construction of convolutional networks with  equivariance to symmetry groups such as rotations and reflections (and even reflections). The project focuses on applying these models to a realworld medical imaging task in histopathology, where robustness to these geometric transformations is important.
 
-Standard convolutional neural networks are equivariant only to translations. However, histopathological images often contain additional symmetries, becuase  tissue samples can appear in arbitrary orientation. Rotations and reflections of a tissue patch do not change its underlying cancer status, yet standard CNNs must learn these symmetries through data augmentation. By explicitly encoding symmetry through group equivariance, steerable GCNNs offer a inbuilt way to improve generalization by implement equviarant filters using fourier coefficients.
 
-The primary dataset used in this project is PatchCamelyon (PCam), a  dataset for detecting metastatic cancer in lymph node histology images. The dataset consists of 96×96 RGB image patches, each labeled according to whether it contains tumor tissue, resulting in a binary classification problem. PCam is well suited for this study because the class label is invariant under rotations and reflections, making it an ideal testbed for equivariant models. The dataset will initially be used with its standard training, validation, and test splits.
+The goal of this project is to implement, optimize, and evaluate a steerable group equivariant convolutional neural network (GCNN) using escnn, a PyTorch-based library that enables the construction of convolutional networks with equivariance to symmetry groups such as rotations and reflections. The project focuses on applying these models to an image classification task in computer vision, where robustness to geometric transformations is important.
 
-Two main models will be implemented and compared. The first is a baseline CNN, consisting of standard convolutional layers, nonlinearities, and pooling operations, serving as a reference for performance and training behavior (and maybe even with data augmentation). The second is a steerable GCNN, implemented using escnn, which replaces standard convolutions with equivariant convolutions defined over different symmetry groups. Multiple symmetry configurations will be explored to study their impact on performance and robustness.
+Standard convolutional neural networks are equivariant only to translations. However, many image classification tasks consist of additional symmetries, because objects can appear in arbitrary orientations within the image. Rotations and reflections of an object do not change its underlying class, but standard CNNs must learn these symmetries through data augmentation or pooling methods. By explicitly encoding symmetry through group equivariance kernels, steerable GCNNs offer an inbuilt way to improve generalization by implementing equivariant filters using Fourier coefficients, which makes tranformation equivariant featuremaps .
 
-Both model types will be trained and optimized using a systematic hyperparameter study, including learning rate, depth, width, and regularization. Final evaluation will be performed using the best-performing hyperparameter configurations.
+The primary dataset used in this project is FashionMNIST, a dataset for image classification consisting of grayscale images of clothing items. The dataset contains 28×28 images across 10 different classes, such as shirts, trousers, and footwear. FashionMNIST is well suited for this study because the class label is equivaraint under rotations and relections, making it a useful for designing equivariant models. The dataset will initially be used with its standard training and test splits.
+
+Two main models will be implemented and compared. The first is a baseline CNN, consisting of standard convolutional layers, nonlinearities, and pooling operations, serving as a baseline for performance and training behavior (potentially including data augmentation). The second is a steerable GCNN, implemented using escnn, which replaces standard convolutions with equivariant convolutions defined over different symmetry groups, such as the SO(2). Multiple symmetry configurations can be explored to study their impact on performance and robustness.
+
+Both model types will be trained and optimized using a systematic hyperparameter sweep study, including learning rate, depth, width, and regularization. Final evaluation will be performed using the best-performing hyperparameter configurations.
+
+**OBS: We have changed the dataset from pCAM to fashionMNIST, due to PCAM being difficult and large to work with.**
 
 ## Project structure
 
@@ -94,7 +98,6 @@ The directory structure of the project looks like this:
 <<<<<<< Updated upstream
 ├── .pre-commit-config.yaml   # Pre-commit hooks (linting, formatting)
 ├── AGENTS.md                 # Instructions for autonomous coding agents
-├── cloudbuild.yaml           # Cloud Build pipeline for Docker image
 ├── data.dvc                  # DVC data versioning file
 =======
 ├── .gitattributes
@@ -162,6 +165,7 @@ uv sync
 # Verify setup
 uv run invoke setup-check
 ```
+Fashion-MNIST downloads automatically to data on first run; no manual DVC pull is needed.
 
 ### Local Training
 ```sh
@@ -169,22 +173,35 @@ uv run invoke setup-check
 uv run python src/dtu_mlops_project/train.py
 
 # Train with custom config
-uv run python src/dtu_mlops_project/train.py trainer=gpu model=cnn data.batch_size=64
+uv run python src/dtu_mlops_project/train.py trainer=gpu model=c8
 
-# Train with experiment config
-uv run python src/dtu_mlops_project/train.py experiment=best_model
+# Log with wandb
+uv run python src/dtu_mlops_project/train.py logger=wandb
+
+# Export trained model to ONNX format after training
+uv run python src/dtu_mlops_project/train.py export_onnx=True
+
+# Combined: Train and export to ONNX with custom hyperparameters
+uv run python src/dtu_mlops_project/train.py trainer=gpu data.batch_size=64 export_onnx=True trainer.max_expochs=10
 ```
+
+The exported ONNX model will be saved to: `logs/train/runs/<timestamp>/model.onnx`
+ONNX models can be deployed to inference servers or used with ONNX Runtime.
 
 ### Hyperparameter Sweeps
 ```sh
-# WandB sweep
-uv run python src/dtu_mlops_project/train.py --multirun hparams_search=wandb_sweep
+# WandB sweep: 1 returns id, 2 runs agent.
+1. uv run wandb sweep configs/hparams_search/wandb_sweep.yaml
+2. uv run wandb agent --count 5 <sweep-id>
+
 ```
 
 ### Cloud Training (Vertex AI)
 ```sh
 # Build and push Docker image to Artifact Registry
-gcloud builds submit . --config cloudbuild.yaml --substitutions=_IMAGE=api,_TAG=$(git rev-parse --short HEAD)
+
+##TODO ÆNDRER TIL config folder istedet for root cloud
+gcloud builds submit . --config configs/gcp/cloudbuild.yaml --substitutions=_IMAGE=api,_TAG=$(git rev-parse --short HEAD)
 
 # Submit Vertex AI training job
 gcloud ai custom-jobs create --region=europe-west1 --display-name=training-job --config=configs/vertex_ai/config_cpu.yaml
@@ -214,17 +231,6 @@ uv run ruff check . --fix
 uv run pre-commit run --all-files
 ```
 
-### Available Commands
-```sh
-# See all Invoke tasks
-uv run invoke --list
-
-# Common tasks
-uv run invoke setup-check      # Verify environment setup
-uv run invoke train            # Run training
-uv run invoke evaluate         # Evaluate model
-uv run invoke test             # Run tests
-```
 
 ## Credits
 - [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template)

@@ -42,6 +42,10 @@ train: True
 # lightning chooses best weights based on the metric specified in checkpoint callback
 test: True
 
+# export model to ONNX format after training
+# usage: python train.py export_onnx=True
+export_onnx: False
+
 # simply provide checkpoint path to resume training
 ckpt_path: null
 

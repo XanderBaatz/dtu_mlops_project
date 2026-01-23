@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import torch
 import typer
 from dtu_mlops_project.model import CNN
@@ -26,8 +27,18 @@ def evaluate(model_checkpoint: Annotated[str, typer.Option("--model", "-m")] = "
     dm.prepare_data()
     dm.setup(stage="test")
 
+    # mypy fix
+    net_config = SimpleNamespace(
+        input_channels=1,  # Fashion MNIST has 1 channel
+        kernel_size=3,
+        padding=1,
+        num_classes=dm.num_classes,
+    )
+
+    optimizer = torch.optim.Adam
+
     # Model
-    model = CNN(num_classes=dm.num_classes).to(DEVICE)
+    model = CNN(net=net_config, optimizer=optimizer)  # type: ignore[arg-type]
     model.load_state_dict(torch.load(model_checkpoint))
 
     # Logger
