@@ -22,83 +22,102 @@ Both model types will be trained and optimized using a systematic hyperparameter
 The directory structure of the project looks like this:
 
 ```txt
-├── .devcontainer/            # VS Code dev container configuration
-├── .github/                  # Github actions and workflows
+├── .devcontainer/                  # VS Code dev container config
+├── .github/                        # GitHub Actions & workflows
 │   ├── dependabot.yaml
 │   └── workflows/
-│       └── tests.yaml        # Automated testing pipeline
-├── .dvcignore                # DVC ignore patterns
-├── .gcloudignore             # Google Cloud ignore patterns (for Cloud Build)
-├── configs/                  # Hydra configuration files
-│   ├── train.yaml            # Main training config
-│   ├── config.yaml           # Base config
-│   ├── data/                 # Data configuration
-│   │   └── fashion_mnist.yaml
-│   ├── model/                # Model configurations
-│   │   ├── cnn.yaml
-│   │   └── c8.yaml
-│   ├── trainer/              # PyTorch Lightning trainer configs
-│   │   ├── cpu.yaml
-│   │   ├── gpu.yaml
-│   │   └── mps.yaml
-│   ├── callbacks/            # Lightning callback configs
-│   ├── logger/               # Logger configurations (CSV, WandB)
-│   ├── paths/                # Path configurations
-│   ├── hydra/                # Hydra framework configs
-│   ├── debug/                # Debug settings
-│   ├── hparams_search/       # Hyperparameter search configs
-│   ├── extras/               # Extra configurations
-│   └── vertex_ai/            # Google Vertex AI job configs
-│       └── config_cpu.yaml
-├── data/                     # Data directory
-│   └── FashionMNIST/         # Fashion MNIST dataset
-├── dockerfiles/              # Docker configurations
-│   ├── api.dockerfile        # FastAPI server Dockerfile
-│   ├── train.dockerfile      # Training Dockerfile
-│   └── cloud.dockerfile      # Cloud training Dockerfile
-├── docs/                     # Project documentation
+│       └── tests.yaml
+├── .dvcignore                      # DVC ignores
+├── .gcloudignore                   # Google Cloud ignore (Cloud Build)
+├── configs/                        # Hydra configuration system
+│   ├── train.yaml                  # Main training config
+│   ├── config.yaml                 # Base config
+│   ├── data/
+│   │   └── fashion_mnist.yaml      # Dataset-specific configs
+│   ├── model/
+│   │   ├── cnn.yaml                # CNN model config
+│   │   └── c8.yaml                 # Alternative model config
+│   ├── trainer/
+│   │   ├── cpu.yaml                # Trainer settings: CPU
+│   │   ├── gpu.yaml                # Trainer settings: GPU
+│   │   └── mps.yaml                # Trainer settings: Apple MPS
+│   ├── callbacks/                  # Lightning callbacks configs
+│   ├── logger/                     # Logging (CSV, wandb) configs
+│   ├── paths/                      # Path configuration files
+│   ├── hydra/                      # Hydra internal configs
+│   ├── debug/                      # Debugging configs
+│   ├── hparams_search/             # Hyperparameter sweep configs
+│   ├── extras/                     # Extra configs
+│   └── vertex_ai/                  # Vertex AI specific configs
+│       └── config_cpu.yaml         # Vertex AI CPU job config
+├── dockerfiles/                    # Docker builds
+│   ├── api.dockerfile              # FastAPI server image
+│   ├── train.dockerfile            # Training image
+│   └── cloud.dockerfile            # Cloud training image
+├── docs/                           # Documentation (mkdocs)
 │   ├── mkdocs.yaml
 │   └── source/
 │       └── index.md
-├── gcp/                      # Google Cloud Platform configs
-│   ├── cloudbuild.yaml       # Cloud Build configuration
-│   └── policy.yaml           # IAM policies
-├── models/                   # Trained model checkpoints
+├── gcp/                            # Google Cloud configs
+│   ├── cloudbuild.yaml
+│   └── policy.yaml
+├── models/                         # Trained/checkpoint model files
 │   └── model.pth
-├── notebooks/                # Jupyter notebooks for exploration
-├── profiler/                 # Performance profiling outputs
-├── reports/                  # Analysis reports and figures
+├── notebooks/                      # Jupyter notebooks
+├── profiler/                       # Profiling outputs
+├── reports/                        # Reports & figures
 │   └── figures/
-│       ├── sample_images.png
-│       └── train_label_distribution.png
-├── src/                      # Source code
+├── src/                            # Source code
 │   └── dtu_mlops_project/
 │       ├── __init__.py
-│       ├── api.py            # FastAPI REST API
-│       ├── apifile.py        # API file utilities
-│       ├── data.py           # Data loading and preprocessing
-│       ├── evaluate.py       # Model evaluation
-│       ├── model.py          # Model architecture definitions
-│       ├── setup_check.py    # Environment setup validation
-│       ├── train.py          # Training script with Hydra config
-│       └── visualize.py      # Visualization utilities
-├── tests/                    # Unit and integration tests
+│       ├── api.py                  # FastAPI REST API
+│       ├── apifile.py              # API utilities
+│       ├── data.py                 # Data loading/preprocessing
+│       ├── evaluate.py             # Evaluation code
+│       ├── model.py                # Model architectures
+│       ├── drift_detection_api.py  # Drift detection with Evidently
+│       ├── setup_check.py          # Environment checks
+│       ├── train.py                # Training script using Hydra
+│       └── visualize.py            # Visualization tools
+├── tests/                          # Tests
 │   ├── __init__.py
-│   ├── test_api.py           # API tests
-│   ├── test_data.py          # Data pipeline tests
-│   └── test_model.py         # Model tests
+│   ├── test_api.py
+│   ├── data_drift_detection.py
+│   ├── drift_report.html
+│   ├── input_output_data.py
+│   ├── locustfile.py
+│   ├── production_input_output.py
+│   ├── README.md
+│   ├── report.html
+│   ├── testimage.jpg
+│   ├── test_data.py
+│   └── test_model.py
+├── wandb/                          # WandB sweep metadata
+│   └── sweep-fgjxye38/
 ├── .gitignore
+<<<<<<< Updated upstream
 ├── .pre-commit-config.yaml   # Pre-commit hooks (linting, formatting)
 ├── AGENTS.md                 # Instructions for autonomous coding agents
 ├── data.dvc                  # DVC data versioning file
+=======
+├── .gitattributes
+├── .pre-commit-config.yaml
+├── .project-root
+├── .python-version
+├── AGENTS.md
+>>>>>>> Stashed changes
 ├── LICENSE
-├── pyproject.toml            # Python project configuration (dependencies, metadata)
-├── README.md                 # This file
-├── tasks.py                  # Invoke task definitions (uv run invoke --list)
-└── uv.lock                   # Locked dependency versions (uv package manager)
+├── README.md
+├── data.dvc                        # DVC data versioning
+├── image.png
+├── pyproject.toml
+├── report.html
+├── tasks.py                        # Task definitions
+└── uv.lock                         # Locked dependencies
+
 ```
 
-## Component Descriptions
+## Component Descriptions (notable components)
 
 ### `src/dtu_mlops_project/`
 - **train.py**: Main training script using PyTorch Lightning and Hydra for config management
@@ -107,6 +126,7 @@ The directory structure of the project looks like this:
 - **evaluate.py**: Model evaluation and metrics computation
 - **api.py**: FastAPI REST API for model inference
 - **visualize.py**: Training visualization and analysis utilities
+- **drift_detection_api.py**: Drift detection api using Evidently
 
 ### `configs/`
 Hierarchical Hydra configuration system for reproducible experiments:
@@ -123,7 +143,12 @@ Hierarchical Hydra configuration system for reproducible experiments:
 - **configs/vertex_ai/config_cpu.yaml**: Vertex AI job configuration (hyperparameters, data paths)
 - **data.dvc**: DVC integration for versioned data in GCS bucket
 
-
+### Tests
+- **test_data.py**: Tests for dataset loading and preprocessing
+- **test_model.py**: Model instantiation and forward-pass tests
+- **test_api.py**: API endpoint tests
+- **data_drift_detection.py**: Drift detection using Evidently
+- **locustfile.py**: API load testing.
 
 
 Created using [mlops_template](https://github.com/SkafteNicki/mlops_template),
