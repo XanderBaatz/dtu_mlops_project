@@ -1,0 +1,8 @@
+wandb_version: 1
+
+data.batch_size:
+  value: 16
+model.optimizer.lr:
+  value: 0.03706873912087231
+model.optimizer.weight_decay:
+  value: 0.00015929297502672557

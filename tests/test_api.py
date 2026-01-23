@@ -35,7 +35,7 @@ def test_health_endpoint(client):
     assert response.json() == {"status": "ok"}
 
 
-@pytest.mark.skip(reason="Too slow for regular test runs")
+# @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_with_valid_image(client):
     """Test predict endpoint with a valid image."""
     img = Image.new("RGB", (100, 100), color="white")
@@ -60,7 +60,7 @@ def test_predict_endpoint_with_valid_image(client):
     assert "confidence" in data
 
 
-@pytest.mark.skip(reason="Too slow for regular test runs")
+# @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_with_real_model_and_sample_image(client):
     """Integration test using the real model and a repo image."""
 
@@ -90,7 +90,7 @@ def test_predict_endpoint_with_real_model_and_sample_image(client):
     assert 0 <= data["confidence"] <= 1
 
 
-@pytest.mark.skip(reason="Too slow for regular test runs")
+# @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_with_invalid_image(client):
     """Test predict endpoint with invalid image data."""
     invalid_data = BytesIO(b"not an image")
@@ -101,7 +101,7 @@ def test_predict_endpoint_with_invalid_image(client):
     assert "Invalid image file" in response.json()["detail"]
 
 
-@pytest.mark.skip(reason="Too slow for regular test runs")
+# @pytest.mark.skip(reason="Too slow for regular test runs")
 def test_predict_endpoint_model_not_found(client):
     """Test predict endpoint when model file is missing."""
     img = Image.new("RGB", (100, 100), color="white")
