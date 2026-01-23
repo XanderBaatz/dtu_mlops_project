@@ -61,12 +61,8 @@ will check the repositories and the code to verify your answers.
 * [x] Remember to either fill out the `requirements.txt`/`requirements_dev.txt` files or keeping your
     `pyproject.toml`/`uv.lock` up-to-date with whatever dependencies that you are using (M2+M6)
 * [x] Remember to comply with good coding practices (`pep8`) while doing the project (M7)
-    * In the root directory run `uv run ruff check .` to check all files.
 * [x] Do a bit of code typing and remember to document essential parts of your code (M7)
-    * Run `uv run mypy file_name.py` on some file to check typing.
-        * Set `--ignore-missing-imports` to get rid of import errors.
 * [x] Setup version control for your data or part of your data (M8)
-    * Blocked by Google, didn't have time to fix.
 * [x] Add command line interfaces and project commands to your code where it makes sense (M9)
 * [x] Construct one or multiple docker files for your code (M10)
 * [x] Build the docker files locally and make sure they work as intended (M10)
@@ -101,9 +97,9 @@ will check the repositories and the code to verify your answers.
 
 ### Week 3
 
-* [ ] Check how robust your model is towards data drifting (M27)
-* [ ] Setup collection of input-output data from your deployed application (M27)
-* [ ] Deploy to the cloud a drift detection API (M27)
+* [x] Check how robust your model is towards data drifting (M27)
+* [x] Setup collection of input-output data from your deployed application (M27)
+* [x] Deploy to the cloud a drift detection API (M27)
 * [ ] Instrument your API with a couple of system metrics (M28)
 * [ ] Setup cloud monitoring of your instrumented application (M28)
 * [ ] Create one or more alert systems in GCP to alert you if your app is not behaving correctly (M28)
@@ -113,12 +109,12 @@ will check the repositories and the code to verify your answers.
 
 ### Extra
 
-* [ ] Write some documentation for your application (M32)
+* [x] Write some documentation for your application (M32)
 * [ ] Publish the documentation to GitHub Pages (M32)
-* [ ] Revisit your initial project description. Did the project turn out as you wanted?
-* [ ] Create an architectural diagram over your MLOps pipeline
-* [ ] Make sure all group members have an understanding about all parts of the project
-* [ ] Uploaded all your code to GitHub
+* [x] Revisit your initial project description. Did the project turn out as you wanted?
+* [x] Create an architectural diagram over your MLOps pipeline
+* [x] Make sure all group members have an understanding about all parts of the project
+* [x] Uploaded all your code to GitHub
 
 ## Group information
 
@@ -201,7 +197,7 @@ The entire list of dependencies can be of course be found in [pyproject.toml](..
 >
 > Answer:
 
-We have mostly been sticking to the pre-defined layout of the cookiecutter template. However we have greatly expanded the configs folder for Hydra - inspired by [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template). We have also added a dedicated folder for Google Cloud stuff in gcp.
+We initialized the project using the provided [cookiecutter template](https://github.com/SkafteNicki/mlops_template) and largely stuck to its overall structure, especially for the core application logic in [src](../src/dtu_mlops_project/). That said, we did make a few deliberate deviations to better support a scalable MLOps workflow. The biggest change is that we have greatly expanded the configs folder for Hydra - inspired by [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template). We also added a dedicated [gcp](../gcp/) directory to keep everything related to Google Cloud Platform in one place.
 
 The full repository structure can be found [here](../README.md#project-structure).
 
@@ -218,7 +214,15 @@ The full repository structure can be found [here](../README.md#project-structure
 >
 > Answer:
 
-We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP484 compliant. These have also been added to pre-commit which ensures that the code is checked before being committed and eventually pushed.
+We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP8 and PEP484 compliant. These have also been added to pre-commit which ensures that the code is checked before being committed and eventually pushed. Additionally, [pre-commit hooks](../.github/workflows/) are:
+- Trailing whitespace
+- End-of-file fixer
+- Check yaml
+- Check added large files
+
+Code formatting and linting ensures consistent readability between all files and different code styles, and so in larger teams, the focus can shift away from code style to logic, and also prevents some common errors.
+Typing prevents runtime type-errors and make the data-flow clearer.
+Documentation turn complex modules into self explanatory APIs and allow for searchable documentation. Pre-commit automate standards, making it easier to remember all the things that need to run before pushing to git.
 
 ## Version control
 
@@ -237,7 +241,7 @@ We have used `ruff` for linting and `mypy` for typing check. These tools enable 
 >
 > Answer:
 
-In total we have implemented 3 main tests. One for the API, one for the dataset/datamodule and another one for the models.
+--- question 7 fill here ---
 
 ### Question 8
 
@@ -397,7 +401,17 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 >
 > Answer:
 
---- question 17 fill here ---
+The full exhaustive list can be printed using:
+```bash
+gcloud services list --enabled
+```
+
+But the most important ones are explained below:
+- `apigateway`, `servicemanagement` and `servicecontrol` are all developer API gateways. Among other things they allow us to configure a service account that acts as a kind of user for controlling various things in the Google Cloud like the data bucket. We can then assign roles/permissions to the service account based on what it needs/requires.
+- `artifactregistry` and `cloudbuild` allow us to create artifact repositories/registries. We specifically use this for storing Docker images in the cloud. These images can then be pulled with docker if wanted. They can be configured in the [cloudbuild.yaml](../gcp/cloudbuild.yaml) file and the cloud.dockerfile.
+- `aiplatform` is the Vertex AI service which we use to train and evaluate our models using the cloud. We use its custom-jobs command which e.g. can launch a VM instance (based on a config) and run the training script. This means that ideally we can offload heavy tasks such as hyperparameter sweeping the cloud, although we didn't have access to a GPU because we didn't have the required subscription.
+- `secretmanager` is used to store 'secrets' such as the Weights and Biases API key so we don't have to manually type it each time.
+- `cloudfunctions` and `run` are entirely used to provide the end user with model weights etc. after training has run, all controlled with an API.
 
 ### Question 18
 
@@ -421,7 +435,7 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 >
 > Answer:
 
---- question 19 fill here ---
+![bucket](figures/bucket.png)
 
 ### Question 20
 
@@ -430,7 +444,7 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 >
 > Answer:
 
---- question 20 fill here ---
+![registry](figures/artifact-registry.png)
 
 ### Question 21
 
@@ -439,7 +453,7 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 >
 > Answer:
 
---- question 21 fill here ---
+![build](figures/build.png)
 
 ### Question 22
 
@@ -491,14 +505,15 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 
 ### Question 25
 
-> **Did you perform any unit testing and load testing of your API? If yes, explain how you did it and what results for**
-> **the load testing did you get. If not, explain how you would do it.**
+> **Did you perform any functional testing and load testing of your API? If yes, explain how you did it and what**
+> **results for the load testing did you get. If not, explain how you would do it.**
 >
 > Recommended answer length: 100-200 words.
 >
 > Example:
-> *For unit testing we used ... and for load testing we used ... . The results of the load testing showed that ...*
-> *before the service crashed.*
+> *For functional testing we used pytest with httpx to test our API endpoints and ensure they returned the correct*
+> *responses. For load testing we used locust with 100 concurrent users. The results of the load testing showed that*
+> *our API could handle approximately 500 requests per second before the service crashed.*
 >
 > Answer:
 
@@ -601,4 +616,15 @@ In total we have implemented 3 main tests. One for the API, one for the dataset/
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
---- question 31 fill here ---
+From the checklist tasks week 1-2-3:
+
+s234744: M2, M7, M12, M14, M16, M24, M27
+
+s234815: M2, M5, M6, M7, M10, M11, M14, M15, M19, M21
+
+s234845: M2, M6, M9, M10, M11, M14, M15, M21, M22, M25, M28
+
+s246222: M2, M7, M8, M11, M16, M17, M18, M22, M23, M24, M29
+
+
+We mainly made use of GitHub copilot integrated into VSCode. This includes the chat function which was primarily used for debugging (e.g. Chat: Last terminal command) when a program failed to run. The inline auto-fill was also used whenever it produced wanted results. This saved us from manual debugging in many cases. Since this project had a boilerplate code base already available, as well as code solutions found on the website, we had a good starting point that we could essentially just conform to our needs. This also meant that it was relatively straight forward to bridge the gap between our thoughts and the pre-existing code base, with or without the use of AI.
