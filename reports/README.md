@@ -149,7 +149,7 @@ s234744, s234815, s234845, s246222
 > Answer:
 
 - [PyTorch Lightning](https://lightning.ai/docs/pytorch/stable/): Although PyTorch Lightning is mentioned (and recommended) in the course, it is not directly shown how it can be implemented. We have used this extensively to stick to a standardized code framework and structure. This has enabled us to utilize a plethora of nice features such as logging, training and data module creation. A lot of the course code has either been refactored or rewritten to work with lightning on our end, such as [train.py](../src/dtu_mlops_project/train.py).
-- [escnn](https://github.com/QUVA-Lab/escnn): An extension to PyTorch that enables the creation of equivariant, steerable, convolutional neural networks. We have used this library to make a steerable CNN that is discretely equivariant to rotatation of 45 degrees. To see the effect of this we transformed the FashionMNIST dataset to include rotated datapoints at random. We then compare a regular CNN (only equivariant to translation) to a group-equivariant CNN, which is both equivariant to translation and rotation groups.
+- [escnn](https://github.com/QUVA-Lab/escnn): An extension to PyTorch that enables the creation of equivariant, steerable, convolutional neural networks. We have used this library to make a steerable CNN that is discretely equivariant to rotation of 45 degrees. To see the effect of this we transformed the FashionMNIST dataset to include rotated datapoints at random. We then compare a regular CNN (only equivariant to translation) to a group-equivariant CNN, which is both equivariant to translation and rotation groups.
 
 ## Coding environment
 
@@ -169,7 +169,7 @@ s234744, s234815, s234845, s246222
 >
 > Answer:
 
-Python dependencies are basically entirely managed by `uv`. When a new dependency is required for deployment we can simply add it using:
+Python dependencies are almost entirely managed by `uv`. When a new dependency is required for deployment we can simply add it using:
 ```bash
 uv add <package name>
 ```
@@ -197,7 +197,7 @@ The entire list of dependencies can be of course be found in [pyproject.toml](..
 >
 > Answer:
 
-We initialized the project using the provided [cookiecutter template](https://github.com/SkafteNicki/mlops_template) and largely stuck to its overall structure, especially for the core application logic in [src](../src/dtu_mlops_project/). That said, we did make a few deliberate deviations to better support a scalable MLOps workflow. The biggest change is that we have greatly expanded the configs folder for Hydra - inspired by [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template). We also added a dedicated [gcp](../gcp/) directory to keep everything related to Google Cloud Platform in one place.
+We initialized the project using the provided [cookiecutter template](https://github.com/SkafteNicki/mlops_template) and largely stuck to its overall structure, especially for the core application logic in [src](../src/dtu_mlops_project/). That said, we did make a few deliberate deviations to better support a scalable MLOps workflow. The biggest change is in the [configs](.../configs) folder. Instead of keeping configurations flat, we expanded this into a hierarchical Hydra setup, inspired by the [Lightning-Hydra-Template](https://github.com/ashleve/lightning-hydra-template). We also added a dedicated [gcp](../gcp/) directory to keep everything related to Google Cloud Platform in one place. This includes deployment and orchestration logic and helps keep infrastructure concerns separate from the main source code.
 
 The full repository structure can be found [here](../README.md#project-structure).
 
@@ -214,15 +214,15 @@ The full repository structure can be found [here](../README.md#project-structure
 >
 > Answer:
 
-We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP8 and PEP484 compliant. These have also been added to pre-commit which ensures that the code is checked before being committed and eventually pushed. Additionally, [pre-commit hooks](../.github/workflows/) are:
+We have used `ruff` for linting and `mypy` for typing check. These tools enable us to write code in a consistent manner that is PEP8 and PEP484 compliant. These have also been added to pre-commit hooks which ensure that the code is checked before being committed and eventually pushed. Additionally, [pre-commit hooks](../.github/workflows/) are:
 - Trailing whitespace
 - End-of-file fixer
 - Check yaml
 - Check added large files
 
-Code formatting and linting ensures consistent readability between all files and different code styles, and so in larger teams, the focus can shift away from code style to logic, and also prevents some common errors.
+Code formatting and linting ensure consistent readability between all files and different code styles, and so in larger teams, the focus can shift away from code style to logic, and also prevents some common errors.
 Typing prevents runtime type-errors and make the data-flow clearer.
-Documentation turn complex modules into self explanatory APIs and allow for searchable documentation. Pre-commit automate standards, making it easier to remember all the things that need to run before pushing to git.
+Documentation turn complex modules into self explanatory APIs and allow for searchable documentation. Pre-commit hooks automate standards, making it easier to remember all the things that need to run before pushing to git.
 
 ## Version control
 
@@ -241,7 +241,12 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 7 fill here ---
+In total we have implemented 41 tests across 3 main test files/modules.
+Under data tests, there are different tests that check the pipeline - focusing on the data preparation for inserting in the model. there are also some tests that check for correct batch sizes, and the correct data is loaded.
+
+Under test model, there's some test that validates the architecture, forward passes and output shapes. There is also a test for optimizer configurations and that the weights actually update during training, and confirms consistency of results.
+
+API tests test endpoints, prediction results, health checks, error handling perfomance of the real model.
 
 ### Question 8
 
@@ -256,7 +261,7 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 8 fill here ---
+Code coverage tells you how much of the code was run during the tests, we have a code covereage of 51%, with almost all of the API code being run, and the majority of data and model files being run. While there's room for improvement, in terms of code coverage. Even if our code coverage were close to 100%, that alone would not guarantee the code is error free. High coverage only shows that lines of code were executed, not that they were tested under all meaningful conditions. Edge cases, unexpected inputs, and integration issues can still slip through. Additionally, tests are only as good as how well they are written. As the project evolved, not all new functionality was matched with equally thorough tests, which also impacts overall reliability.
 
 ### Question 9
 
@@ -271,7 +276,9 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 9 fill here ---
+As the main branch is push-restricted, it was necessary to create a branch, which had to be approved by unit-testing before being able to merge to main. This ensured that a feature that potentially breaks something vital didn't get merged directly into main. This is especially seen in one of our merges, where the unit testing caught an error with the data, which could be fixed later on, before merging to main.
+
+But the power of working on branches also made it possible for us to collaborate on features, before we made our docker cross compatible. An example is the ARM support for ESCNN, where we could collaborate on the training architecture and merge into main.
 
 ### Question 10
 
@@ -286,7 +293,8 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 10 fill here ---
+We configured DVC with Google Cloud Storage (gs://mlops_80) and tracked our data directory using data.dvc, which allowed us to set up the necessary infrastructure for data versioning and reproducibility from the start. This ensured that the project was technically ready to handle dataset changes and scale to larger or more dynamic data sources in the future.
+In practice, we did not, however, rely on dvcs versioning features, our dataset is static and automatically downloaded through PyTorch, meaning there were no changes in the underlying data, that required version tracking. Because of this, benefits of dvc were limited in our case. Though DVC would have been beneficial if we experimented with different dataset versions etc, or we were synthetical producing images.
 
 ### Question 11
 
@@ -303,7 +311,13 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 11 fill here ---
+In our continuous integration setup, we focused on [unit testing](.../.github/workflows/tests.yaml) and [linting](.../.github/workflows/linting.yaml) to ensure code quality, reproducibility, and early bug detection. We use Ruff for linting and formatting checks, which helps maintain a consistent coding style and catch common issues early. To further improve code robustness, we also run static type analysis with mypy, ensuring a more stable and predictable data flow throughout the project.
+
+For testing, we rely primarily on pytest. All unit tests are executed inside a Docker container on Ubuntu, which provides a consistent environment and keeps CI runtimes reasonable during pull requests. Since Docker support is less reliable on macOS and Windows, and to avoid unnecessary test overhead, we additionally run native checks on those platforms. These focus on identifying environment-specific and Python-level compatibility issues, helping ensure a degree of cross-platform support.
+
+To speed up repeated runs, we leverage caching in multiple places. In the native checks workflow, we use astral-sh/setup-uv@v5 with enable-cache: true, which automatically caches the uv environment and its dependencies between runs. This cache benefits later steps, including creating a virtual environment and running uv sync, reducing installation time significantly. Similarly, for Python-related tasks, we use actions/setup-python@v5 with cache: 'pip'. This built-in feature caches pip-installed packages, so installing tools like pre-commit is faster on subsequent runs.
+
+Finally, we include a data validation step that only triggers when DVC-tracked files change. This step computes basic dataset statistics to detect unintended data changes early in the pipeline.
 
 ## Running code and tracking experiments
 
@@ -322,7 +336,24 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 12 fill here ---
+For a hyperparameter optimization experiment:
+We use configs/hparams_search/wandb_sweep.yaml as a configure of the search method, eg random or grid. And also the ranges of hyperparameter such as learning rate, batch size etc. For each sweep trial, a model is initiated with the chosen hyperparameter of the current search using pytorch lightning.
+
+Its possible to run an experiment using CLI:
+
+First to intialise a sweep:
+```bash
+uv run wandb sweep configs/hparams_search/wandb_sweep.yaml
+```
+```bash
+uv run wandb agent --count <no.trials> <sweep-id>
+```
+Now that the model is optimized, its possible to run and export the model using onnx using the command:
+
+```bash
+uv run python src/dtu_mlops_project/train.py model=c8 trainer.max_epochs=10
+```
+The model=c8 uses the hydra config for the model with the optimized hyperparamters
 
 ### Question 13
 
@@ -337,7 +368,19 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 13 fill here ---
+We implemented several measures to ensure reproducibility:
+
+    - We use seeded experiments to ensure equal results on equal architectures
+
+    - We’re using Weights \& Biases to keep track of everything—it logs our hyperparameters, loss and accuracy curves, and keeps a history of our runs. Just make sure you include logger=wandb in your CLI command so your data actually shows up on the dashboard.
+
+    - Hydra saves the complete configuration snapshot in logs/train/runs/<timestamp>/.hydra/
+
+    - Lightning saves weight checkpoints logs/train/runs/<timestamp>/checkpoints/
+
+    - CSV logging captures training/validation metrics in logs/train/runs/<timestamp>/csv/
+
+    - When you have export_onnx=True enabled, the system automatically exports the model into the ONNX format, which bundles together both the network architecture and the trained weights into a single file. This is great for interoperability, as it makes it much easier to deploy the model across different frameworks or hardware accelerators later on.
 
 ### Question 14
 
@@ -354,7 +397,13 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 14 fill here ---
+We conducted extensive hyperparameter optimization experiments using WandB to systematically tune our Fashion-MNIST classifier. The experiments involved running multiple sweep trials with varying configurations of batch size, learning rate, and weight decay.
+
+![Figure 1](figures/Figure1.png) ranks hyperparameter importance using W&B's built-in analysis. Weight decay and learning rate show moderate importance with positive correlation (green bars), while batch size shows slight negative correlation (red bar). This analysis helps us prioritize which hyperparameters to focus on in future optimization efforts and understand their relative impact on final model performance.
+
+![Figure 2](figures/Figure2.png) displays a parallel coordinates plot linking our three key hyperparameters to final training accuracy. The color gradient (yellow for high accuracy, purple for low) reveals important patterns: batch sizes around 40-65 tend to perform better, learning rates of 0.01-0.05 appear optimal, and moderate weight decay values (around 0.0005-0.0009) yield the best results. This visualization is essential for understanding hyperparameter interactions and identifying promising regions in the search space without exhaustively testing all combinations.
+
+![Figure 3](figures/Figure3.png) shows the training/validation accuracy curves across the first 10 runs of our hyperparameter sweep. Each colored line represents a different trial with unique hyperparameter combinations. We observe significant variation in model performance, with some configurations (like copper-sweep-4) achieving accuracies above 0.8, while others plateau around 0.4. This metric is crucial as it directly indicates how well our model learns to classify F-MNIST images during training and helps us identify which configurations enable better convergence and stability.
 
 ### Question 15
 
@@ -369,7 +418,27 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 15 fill here ---
+We have created five dockerfiles, one for everything related to training (and one old version of this). For api.dockerfile this image runs our FastAPI prediction service. It's similar to the training image but has a different entrypoint—it starts uvicorn to serve the API on port 8000. Then theres two versions of cloud.dockerfile, one old and one current. The cloud image is a variant of the training image optimized for deployment on Google Cloud (Vertex AI). It uses a multi-stage build to copy uv from its official image, then uses a Microsoft devcontainer base image that's compatible with cloud infrastructure.
+
+Docker image link: europe-west1-docker.pkg.dev/project-1ae70a6c-230c-4a5d-a4f/pytorch-container/train:latest
+
+Local link: ../dockerfiles/cloud.dockerfile
+
+Locally, they can be build using:
+
+docker build -f dockerfiles/train.dockerfile . -t train:latest
+
+and run using:
+
+```bash
+docker run --rm --name train_run train:latest
+```
+
+The cloud image can be pulled using:
+
+```bash
+docker pull europe-west1-docker.pkg.dev/project-1ae70a6c-230c-4a5d-a4f/pytorch-container/train:latest
+```
 
 ### Question 16
 
@@ -384,7 +453,7 @@ Documentation turn complex modules into self explanatory APIs and allow for sear
 >
 > Answer:
 
---- question 16 fill here ---
+During training of the model, we have incorporated profiling. This was not difficult to set up as the profiler itself is about 10 lines of code using the Pytorch profiler that comes with the lightning module. Then we used the keyword argument profiler with the profiler in the initilazation of the trainer to utilize the profiler, which then, after training, gives at report in the form of a few JSON files. It can then be loaded and inspected using tensorboard. We have not explored this feature fully but in future projects it is definitely useful for monitoring CPU side operations and CUDA kernel launches. Debugging was mostly performed by more primitive methods such as just trying different solutions, or generative AI.
 
 ## Working in the cloud
 
@@ -426,7 +495,22 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 18 fill here ---
+As we also touched in question 17, we primary used the Vertex Ai to initialise a VM using a docker with config file. As this was faster (as shown in lectures) than setting up a VM ourself.
+
+In the config file + docker file, we specified what VN we wanted, so we got a server in west europe. With a n1-highmem-2 CPU only architecture, .
+
+In order to build the image on the VM we used command:
+```bash
+gcloud builds submit . --config cloudbuild.yaml --substitutions=_IMAGE=api,_TAG=$(git rev-parse --short HEAD)
+```
+
+In order to train on the newly created image, we use command:
+```bash
+gcloud ai custom-jobs create --region=europe-west1 --display-name=training-job --config=configs/vertex_ai/config_cpu.yaml
+```
+In the config file, we also specify epochs, hyperparameters etc as per usual.
+
+This made it possible to train multiple, very large models over the night instead of doing it loccally.
 
 ### Question 19
 
@@ -468,7 +552,7 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 22 fill here ---
+As we also talked about in question 18, we used vertex AI To train our models on a custom job, using the method described in question 18. The reason we chose vertex AI over the engine, is because it was way easier to just build an image, and then create a instance of that image with a training command. Where a VM should need an SSH connection, we needed to download the necessary deep-learning libraries etc. Vertex AI made this quite easy.
 
 ## Deployment
 
@@ -485,7 +569,9 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 23 fill here ---
+We implemented an API for our trained model using FastAPI. The purpose of the API is to make the model accessible for inference by allowing users to upload an image and receive a Fashion-MNIST class prediction. The response includes both the predicted class ID, the corresponding class name, and an associated confidence score. The central component of the API is a /predict endpoint, which accepts an image via an HTTP POST request. To ensure compatibility with the Fashion-MNIST dataset, the image is converted to grayscale and resized to 28x28 pixels. The same preprocessing steps used during training, including normalization and tensor conversion, are applied to maintain consistency between training and inference. After preprocessing, the image is passed through the trained PyTorch model in evaluation mode, and predictions are computed using a softmax output to obtain class probabilities.
+
+In addition to the prediction endpoint, the API includes a /health endpoint that returns a simple status response. This endpoint can be used to verify that the service is running and reachable.
 
 ### Question 24
 
@@ -501,7 +587,16 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 24 fill here ---
+We successfully deployed our inference API using Google Cloud, that allows us to run our containerized FastAPI application in a scalable environment. The service is configured to listen for HTTP requests and utilize our pre-trained model weights to serve predictions on the Fashion-MNIST dataset. To interact with our deployed service, you can use the following curl commands:
+
+Health check - should return "status ok"
+```bash
+curl https://mlops-api-421954772237.europe-west1.run.app/health
+```
+Prediction (replace with your image path) - should return the class the model predicts the picture belongs to from the F-MNIST dataset
+```bash
+curl -X POST -F "file=@<path-to-image.png>" https://mlops-api-421954772237.europe-west1.run.app/predict
+```
 
 ### Question 25
 
@@ -517,7 +612,7 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 25 fill here ---
+Unit tests for FastAPI include health check - just to see if the api exists. Also doing several predict cases mocked model, real checkpoint if present, invalid image, missing model). We also used locust for testing of the API, specifically the /predict endpoint. This was done by simulating users repeatedly sending randomly selected Fashion-MNIST test images to the /predict endpoint with realistic pauses between requests. The dataset is loaded once, converts the randomly chosen image to PNG in memory, posts it to the API, checks if the repsonse is valid and finally tracks if the predicted clas matches the true label. When the user stops, it prints the model's accuracy observed during load test without letting wrong predictions count as failures.
 
 ### Question 26
 
@@ -532,7 +627,10 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 26 fill here ---
+We implemented different types of monitoring. The first type is using the libary: prometheus which we embedd on our API.py. Here we make it monitor stuff such as "api_requests_total, api_errors_total, classification_duration_seconds, review_size_bytes". We have also made a SLO on our cloud-runned API where we have made it a "Availability" metric, with a threshold of 99\%.
+We have also created a few alerts, the first alert is CPU usage, if our API uses more than 80 percent, its probably time to upgrade. We have also created a log_entries with threshold 0.01, allowing us to detect error logs.
+
+These monitoring will make us better understand our API performance, and can maybe show if we need to make a better server, optimize some models etc.
 
 ## Overall discussion of project
 
@@ -551,7 +649,9 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 27 fill here ---
+Luckily our models were quite small, and fashion MNIST is also a very small dataset aswell, so we did not use that many credits. We even got free credits from the vertex AI activation, which was perfect as this was also the most expensive part, as we ran alot of training on this AI.
+
+In general cloud has so much potential to be utilized in for example our upcoming theises. But the learning curve is quite steep, and the interface is quite frankly terrifying at first.  But the plug-and-play-forget of the training after setting up vertexAI of multiple models is really good!
 
 ### Question 28
 
@@ -567,7 +667,8 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 28 fill here ---
+Regarding what has not been covered by other questions, we can mention the robustness of the data and in general drift of the data, and what we did to detect it. Data drift occurs when the input data changes over time from what it was originally trained on for whatever reason, be it a shift in user behavior or fashion trends. Even though the model has not changed, performance can then degrade over time.
+Using the Evidently module (specifically the legacy code) it was possible to generate an HTML file with the desired features tested such as mean, standard deviation, min and max, and then compute a drift score and an analysis of whether the data has drifted. However, since the project duration was short, it is expected that there will be no drift in the data, so we just split the dataset in two and tested it on these components, which in fact did not show any drift.
 
 ### Question 29
 
@@ -584,7 +685,15 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 29 fill here ---
+![pipeline image](figures/Pipeline.drawio.png)
+
+The workflow begins on the Local Machine, where the developer runs experiments and hyperparameter sweeps. To ensure reproducibility and visibility, these experiments are tracked using Weights \& Biases (WandB) for metrics and Hydra for configuration management.
+
+Code changes are managed via GitHub. The development process involves a pipeline: developers run pre-commit checks locally before committing. Upon pushing code ("Dev -> push"), GitHub Actions are triggered automatically. This CI pipeline runs linting and unit tests across multiple environments (macOS, Ubuntu, Windows) to ensure cross-platform compatibility.
+
+Successful pushes trigger automatic Docker builds. The resulting images (for training and API) are stored in the Artifact Registry. For heavy workloads, training jobs are submitted to Vertex AI. The training instance pulls the specific Docker image from the Artifact Registry and the latest dataset from the Google Cloud Storage bucket. The inference API is containerized and deployed to Google Cloud Run, providing a scalable serverless environment.
+
+The end user interacts with the system in two ways: they can either clone the source code directly from GitHub for local use, or they can query the live model deployed on Cloud Run via the API (e.g., using curl) to get predictions or a health check.
 
 ### Question 30
 
@@ -598,7 +707,13 @@ But the most important ones are explained below:
 >
 > Answer:
 
---- question 30 fill here ---
+Overall the place where most hours was wasted troubleshooting and trying to get gcloud to work, for the API finding builds, that both didn't fail locally, but also didn't fail on the cloud, proved a more difficult task than anticipated. Setting up the GitHub CI, was also difficult, primarily because of gfortran and escnn issues, but also docker issues with MacOS and windows, we had to overcome this by creating a amd64 build inside the mac docker build. This had the downside that it was a bit slower, but now our docker was cross compatible.
+
+Initially understanding and converting the training script and datamodule to PyTorch Lightning proved to be a challenge, however once it was set up it was such a breeze to use. It also made Hydra configuration files much easier to implement and basically any extensions we wished for had a Lightning implementation (e.g. the loggers).
+
+Getting to test the API also proved a bit difficult at first but once all the required commands and code was in place, it made perfect sense.
+
+Initial setup of WSL, also proved difficult, since windows would not allow the installation for unknown reasons, and after a couple of days, of not doing anything the issue was suddenly resolved.
 
 ### Question 31
 
@@ -616,7 +731,7 @@ But the most important ones are explained below:
 > *We have used ChatGPT to help debug our code. Additionally, we used GitHub Copilot to help write some of our code.*
 > Answer:
 
-From the checklist tasks week 1-2-3:
+From the checklist tasks week 1-2-3 - what each of us worked most on:
 
 s234744: M2, M7, M12, M14, M16, M24, M27
 
@@ -624,7 +739,7 @@ s234815: M2, M5, M6, M7, M10, M11, M14, M15, M19, M21
 
 s234845: M2, M6, M9, M10, M11, M14, M15, M21, M22, M25, M28
 
-s246222: M2, M7, M8, M11, M16, M17, M18, M22, M23, M24, M29
+s246222: M2, M7, (M8), M11, M16, M17, M18, M22, M23, M24, M29
 
 
-We mainly made use of GitHub copilot integrated into VSCode. This includes the chat function which was primarily used for debugging (e.g. Chat: Last terminal command) when a program failed to run. The inline auto-fill was also used whenever it produced wanted results. This saved us from manual debugging in many cases. Since this project had a boilerplate code base already available, as well as code solutions found on the website, we had a good starting point that we could essentially just conform to our needs. This also meant that it was relatively straight forward to bridge the gap between our thoughts and the pre-existing code base, with or without the use of AI.
+We mainly made use of GitHub copilot integrated into VSCode. This includes the chat function which was primarily used for debugging (e.g. Chat: Last terminal command) when a program failed to run. The inline auto-fill was also used whenever it produced wanted results. This saved us from manual debugging in many cases. Since this project had a boilerplate code base already available, as well as code solutions found on the website, we had a good starting point that we could essentially just conform to our needs. This also meant that it was relatively straight forward to bridge the gap between our thoughts and the pre-existing code base, with or without the use of AI. Additionally we also used Ai in spellchecking and proof-reading.
