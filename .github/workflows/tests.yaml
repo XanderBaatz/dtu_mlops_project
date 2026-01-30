@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build test image
         run: |
           docker build -f dockerfiles/train.dockerfile -t test:latest .
@@ -36,7 +36,7 @@ jobs:
         python-version: ["3.12"]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Fortran
         uses: fortran-lang/setup-fortran@v1
       - name: Install uv
