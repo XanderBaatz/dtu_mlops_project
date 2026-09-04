@@ -11,7 +11,7 @@ repos:
         args: ['--maxkb=500']
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.13
+    rev: v0.16.6
     hooks:
 
       - id: ruff
@@ -22,7 +22,7 @@ repos:
       - id: ruff
 
   - repo: https://github.com/iterative/dvc
-    rev: 3.66.1
+    rev: 3.67.1
     hooks:
       - id: dvc-pre-commit
         additional_dependencies: ['.']
